@@ -1,0 +1,35 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Install React Router",
+			"type": "shell",
+			"command": "npm install --prefix client react-router-dom",
+			"isBackground": false
+		},
+		{
+			"label": "Install Zod in client",
+			"type": "shell",
+			"command": "npm install --prefix client zod",
+			"isBackground": false
+		},
+		{
+			"label": "Install Tailwind CSS v4",
+			"type": "shell",
+			"command": "npm install --prefix client --save-dev tailwindcss @tailwindcss/vite",
+			"isBackground": false
+		},
+		{
+			"label": "Build client with Tailwind",
+			"type": "shell",
+			"command": "npm run build --prefix client",
+			"isBackground": false
+		},
+		{
+			"label": "Install MUI core dependencies",
+			"type": "shell",
+			"command": "npm install --prefix client @mui/material @emotion/react @emotion/styled",
+			"isBackground": false
+		}
+	]
+}
