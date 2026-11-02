@@ -1,169 +1,107 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/*
+ * Tailwind ⇄ design tokens.
+ * Tailwind has NO colours/radii of its own here: every utility below resolves to a CSS variable that
+ * MUI generates from src/design/tokens.ts (`--mui-palette-*`, switched by [data-theme]) or that the
+ * theme emits on :root (`--kb-*`). Changing a token therefore re-themes MUI and Tailwind together.
+ * See design-system.md §10 for the rules (when to use Tailwind vs MUI `sx`).
+ */
+
+/* `dark:` variant follows the app's colour scheme attribute, not the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  /* Surfaces */
+  --color-app: var(--mui-palette-background-default);
+  --color-surface: var(--mui-palette-background-paper);
+  --color-raised: var(--mui-palette-surface-raised);
+  --color-sunken: var(--mui-palette-surface-sunken);
+
+  /* Text */
+  --color-content: var(--mui-palette-text-primary);
+  --color-content-secondary: var(--mui-palette-text-secondary);
+  --color-content-muted: var(--mui-palette-text-muted);
+
+  /* Borders (divider = decorative; interactive = control boundary, ≥3:1) */
+  --color-divider: var(--mui-palette-divider);
+  --color-border-strong: var(--mui-palette-border-strong);
+  --color-border-interactive: var(--mui-palette-border-interactive);
+
+  /* Brand + semantic */
+  --color-primary: var(--mui-palette-primary-main);
+  --color-primary-contrast: var(--mui-palette-primary-contrastText);
+  --color-ai: var(--mui-palette-ai-main);
+  --color-ai-text: var(--mui-palette-ai-text);
+  --color-ai-contrast: var(--mui-palette-ai-contrastText);
+  --color-success: var(--mui-palette-success-main);
+  --color-warning: var(--mui-palette-warning-main);
+  --color-error: var(--mui-palette-error-main);
+  --color-info: var(--mui-palette-info-main);
+
+  /* Soft tinted backgrounds */
+  --color-tint-primary: var(--mui-palette-tint-primary);
+  --color-tint-ai: var(--mui-palette-tint-ai);
+  --color-tint-success: var(--mui-palette-tint-success);
+  --color-tint-warning: var(--mui-palette-tint-warning);
+  --color-tint-error: var(--mui-palette-tint-error);
+  --color-tint-info: var(--mui-palette-tint-info);
+
+  /* Todo status / priority / type / sprint status (marker colours — always pair with icon or label) */
+  --color-status-todo: var(--mui-palette-status-todo);
+  --color-status-in-progress: var(--mui-palette-status-in_progress);
+  --color-status-in-review: var(--mui-palette-status-in_review);
+  --color-status-done: var(--mui-palette-status-done);
+  --color-priority-low: var(--mui-palette-priority-low);
+  --color-priority-medium: var(--mui-palette-priority-medium);
+  --color-priority-high: var(--mui-palette-priority-high);
+  --color-priority-urgent: var(--mui-palette-priority-urgent);
+  --color-type-task: var(--mui-palette-todoType-task);
+  --color-type-story: var(--mui-palette-todoType-story);
+  --color-type-bug: var(--mui-palette-todoType-bug);
+  --color-sprint-planned: var(--mui-palette-sprint-planned);
+  --color-sprint-active: var(--mui-palette-sprint-active);
+  --color-sprint-completed: var(--mui-palette-sprint-completed);
+
+  /* Radius, shadow, motion, fonts */
+  --radius-sm: var(--kb-radius-sm);
+  --radius-md: var(--kb-radius-md);
+  --radius-lg: var(--kb-radius-lg);
+  --radius-xl: var(--kb-radius-xl);
+  --shadow-sm: var(--mui-palette-shadow-sm);
+  --shadow-md: var(--mui-palette-shadow-md);
+  --shadow-lg: var(--mui-palette-shadow-lg);
+  --ease-out: var(--kb-ease-out);
+  --font-sans: var(--kb-font-sans);
+  --font-mono: var(--kb-font-mono);
+
+  /* Fixed layout sizes → w-sidebar, h-topbar, w-board-column, w-assistant … */
+  --spacing-sidebar: var(--kb-layout-sidebar-width);
+  --spacing-sidebar-collapsed: var(--kb-layout-sidebar-collapsed-width);
+  --spacing-topbar: var(--kb-layout-topbar-height);
+  --spacing-board-column: var(--kb-layout-board-column-width);
+  --spacing-board-gap: var(--kb-layout-board-column-gap);
+  --spacing-assistant: var(--kb-layout-assistant-width);
+}
+
+/* Media queries cannot read CSS variables, so these MUST match `breakpoints` in src/design/tokens.ts. */
+@theme {
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+}
+
 :root {
-  font-family: "DM Sans", sans-serif;
-  color: #20233c;
-  background: #f6f7fb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-  font-weight: 400;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-}
-
-button,
-a {
-  font: inherit;
-}
-
-.welcome {
-  position: relative;
-  display: grid;
-  min-height: 100vh;
-  overflow: hidden;
-  place-items: center;
-  padding: 32px 20px;
-  background:
-    radial-gradient(ellipse at 15% 15%, rgb(131 113 255 / 10%), transparent 34%),
-    radial-gradient(ellipse at 86% 82%, rgb(57 201 178 / 12%), transparent 31%),
-    #f6f7fb;
-}
-
-.welcome-card {
-  z-index: 1;
-  width: min(100%, 560px);
-  padding: 56px 48px;
-  border: 1px solid rgb(255 255 255 / 85%);
-  border-radius: 28px;
-  background: rgb(255 255 255 / 78%);
-  box-shadow: 0 24px 80px rgb(34 39 85 / 9%);
-  text-align: center;
-  backdrop-filter: blur(16px);
-}
-
-.brand-mark {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  margin: 0 auto 30px;
-  place-items: center;
-  border-radius: 17px;
-  background: #6858e8;
-  color: white;
-  font-family: "Manrope", sans-serif;
-  font-size: 26px;
-  font-weight: 800;
-  box-shadow: 0 8px 18px rgb(104 88 232 / 25%);
-}
-
-.eyebrow {
-  margin: 0 0 18px;
-  color: #777b97;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-}
-
-h1 {
-  margin: 0;
-  font-family: "Manrope", sans-serif;
-  font-size: clamp(38px, 8vw, 56px);
-  font-weight: 800;
-  letter-spacing: -0.06em;
-  line-height: 1.12;
-}
-
-h1 span {
-  color: #6858e8;
-}
-
-.intro {
-  max-width: 370px;
-  margin: 20px auto 30px;
-  color: #73778f;
-  font-size: 16px;
-  line-height: 1.7;
-}
-
-.get-started {
-  display: inline-flex;
-  min-width: 176px;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 15px 20px;
-  border: 0;
-  border-radius: 12px;
-  background: #6858e8;
-  color: white;
-  cursor: pointer;
-  font-weight: 700;
-  transition:
-    background 150ms ease,
-    transform 150ms ease;
-}
-
-.get-started:hover {
-  transform: translateY(-2px);
-  background: #5747d2;
-}
-
-.get-started span {
-  font-size: 20px;
-  line-height: 1;
-}
-
-.sign-in {
-  margin: 24px 0 0;
-  color: #8589a0;
-  font-size: 13px;
-}
-
-.sign-in a {
-  color: #5548cc;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.sign-in a:hover {
-  text-decoration: underline;
-}
-
-.decor {
-  position: absolute;
-  width: 230px;
-  height: 230px;
-  border: 1px solid rgb(104 88 232 / 10%);
-  border-radius: 50%;
-}
-
-.decor-one {
-  top: -112px;
-  right: 12%;
-}
-
-.decor-two {
-  bottom: -155px;
-  left: 9%;
-  width: 310px;
-  height: 310px;
-  border-color: rgb(43 188 164 / 14%);
-}
-
-@media (max-width: 520px) {
-  .welcome-card {
-    padding: 44px 24px;
-  }
 }
