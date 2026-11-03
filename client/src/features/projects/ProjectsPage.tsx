@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import Add from "@mui/icons-material/Add";
 import FolderOpen from "@mui/icons-material/FolderOpen";
 import SearchOff from "@mui/icons-material/SearchOff";
-import { Box, Button, Skeleton, TextField, Typography } from "@mui/material";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import { Box, Button, InputAdornment, Skeleton, TextField, Typography } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import { EmptyState } from "../../components/EmptyState";
@@ -153,7 +154,18 @@ export default function ProjectsPage() {
             placeholder="Search projects…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            slotProps={{ htmlInput: { "aria-label": "Search projects" } }}
+            slotProps={{
+              htmlInput: {
+                "aria-label": "Search projects",
+              },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlined fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
             sx={{ width: { xs: "100%", sm: 320 } }}
           />
         )}

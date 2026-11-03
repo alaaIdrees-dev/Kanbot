@@ -5,6 +5,8 @@ import { Outlet, useMatch, useMatches } from "react-router-dom";
 import { layout } from "../../design/tokens";
 import { titleOf } from "../../lib/routeHandle";
 import { AssistantDrawer } from "./AssistantDrawer";
+import { AssistantDrawerContext } from "./AssistantDrawerContext";
+import { TopBarSlotContext } from "./TopBarSlotContext";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
@@ -18,6 +20,7 @@ export function AppShell() {
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   const [navOpen, setNavOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [metaSlot, setMetaSlot] = useState<HTMLElement | null>(null);
 
   const projectId = useMatch("/projects/:projectId/*")?.params.projectId;
   const matches = useMatches();
@@ -80,6 +83,7 @@ export function AppShell() {
           showMenuButton={!isDesktop}
           onOpenMenu={() => setNavOpen(true)}
           onAskAi={projectId ? () => setAssistantOpen(true) : undefined}
+          metaSlotRef={setMetaSlot}
         />
         <Box
           component="main"
@@ -87,7 +91,11 @@ export function AppShell() {
           tabIndex={-1}
           sx={{ flex: 1, overflow: "auto", outline: "none" }}
         >
-          <Outlet />
+          <TopBarSlotContext.Provider value={metaSlot}>
+            <AssistantDrawerContext.Provider value={{ open: () => setAssistantOpen(true) }}>
+              <Outlet />
+            </AssistantDrawerContext.Provider>
+          </TopBarSlotContext.Provider>
         </Box>
       </div>
 

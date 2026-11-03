@@ -11,9 +11,11 @@ interface TopBarProps {
   onOpenMenu: () => void;
   /** "Ask AI" is only offered on project pages (the assistant needs a project). */
   onAskAi?: () => void;
+  /** Receives the element where pages render title metadata through `<TopBarMeta>`. */
+  metaSlotRef?: (node: HTMLElement | null) => void;
 }
 
-export function TopBar({ title, showMenuButton, onOpenMenu, onAskAi }: TopBarProps) {
+export function TopBar({ title, showMenuButton, onOpenMenu, onAskAi, metaSlotRef }: TopBarProps) {
   return (
     <Box
       component="header"
@@ -34,9 +36,14 @@ export function TopBar({ title, showMenuButton, onOpenMenu, onAskAi }: TopBarPro
           <MenuIcon />
         </IconButton>
       )}
-      <Typography variant="h4" component="h1" noWrap sx={{ flex: 1, minWidth: 0 }}>
+      <Typography variant="h4" component="h1" noWrap sx={{ minWidth: 0 }}>
         {title}
       </Typography>
+      {/* Page-provided metadata, e.g. backlog totals. Empty (zero width) on pages that add none. */}
+      <Box
+        ref={metaSlotRef}
+        sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", ml: 1 }}
+      />
       {onAskAi && (
         <Button variant="contained" color="ai" startIcon={<AutoAwesome />} onClick={onAskAi}>
           Ask AI

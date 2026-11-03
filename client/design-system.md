@@ -177,6 +177,10 @@ Theme-level behaviour you get for free:
 | `FullPageLoader`, `FullPageError`, `NotFoundPage` | (existing) | Unchanged; they pick up the theme automatically. |
 | `PageContainer` | `children` | Standard page padding + max width (`layout.pageMaxWidth`) inside the app shell. |
 | `PlaceholderPage` | `title`, `projectsLink?` | Stand-in for screens built on later days (backlog, board, sprints). |
+| `PointsBadge` (`features/todos`) | `points: StoryPoints \| null` | Story points pill: "5 pts", "1 pt", or "–" when not estimated. Rows (Day 3), board cards (Day 5). |
+| `BacklogSection` (`features/backlog`) | `title`, `summary`, `actions?`, `children` | Collapsible group of todo rows with a sunken header band (wireframe 04). Day 4 reuses it for planned sprints (`actions` = Edit / Start sprint). |
+| `TopBarMeta` (`features/shell`) | `children` | Portals small metadata next to the page title in the top bar (e.g. backlog totals "18 todos · 42 pts"). Needs the `TopBarSlotContext` provided by `AppShell`. |
+| `PlannedActionButton` (`features/backlog`) | `reason`, Button props | Disabled toolbar action from a wireframe whose feature lands on a later day; tooltip says when. Replace with a normal `Button` when built. |
 
 ### 8.3 Domain visuals — contract (built in the feature days)
 `PriorityBadge`, `TypeIcon`, `PointsSelect` are built in `features/todos` (plan Day 3), `SprintProgress` in `features/board`, etc. They must follow the contract:
@@ -249,5 +253,5 @@ Before creating or changing UI: (1) read the relevant requirement IDs, (2) read 
 - **Build, lint and TypeScript were not run** for this change: the review environment had no network/`node_modules`. Run `npm run build && npm run lint` and fix anything they report; the colour audit is the only check that was executed.
 - Not verified: `colorSchemeSelector: "data-theme"` generating `[data-theme="light"]` selectors on MUI v9.5 (see README "Verify after pulling").
 - Visual QA in a browser (both themes) is still to do.
-- Not implemented: board/backlog components, assistant drawer, Markdown/code-block styling for AI replies (requires `react-markdown`, not installed), drag-and-drop visuals (requires dnd-kit, not installed).
+- Not implemented: board components, planned-sprint sections and drag handles in the backlog (Day 4), assistant drawer, Markdown/code-block styling for AI replies (requires `react-markdown`, not installed), drag-and-drop visuals (requires dnd-kit, not installed).
 - Fonts: DM Sans loads from Google Fonts (existing behaviour); mono uses system fonts.

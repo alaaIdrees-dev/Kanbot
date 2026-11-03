@@ -26,23 +26,31 @@ interface NavItemProps {
   label: string;
   icon: ReactNode;
   selected: boolean;
+  disabled?: boolean;
   onNavigate?: () => void;
 }
 
-function NavItem({ to, label, icon, selected, onNavigate }: NavItemProps) {
+function NavItem({ to, label, icon, selected, disabled = false, onNavigate }: NavItemProps) {
   return (
     <ListItemButton
       component={RouterLink}
       to={to}
       selected={selected}
+      disabled={disabled}
       aria-current={selected ? "page" : undefined}
       onClick={onNavigate}
-      sx={{ borderRadius: 2, mb: 0.25, "&.Mui-selected": { color: "primary.main" } }}
+      sx={{
+        borderRadius: 2,
+        mb: 0.25,
+        "&.Mui-selected": { color: "primary.main" },
+      }}
     >
       <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>{icon}</ListItemIcon>
       <ListItemText
         primary={label}
-        slotProps={{ primary: { sx: { fontWeight: selected ? 600 : 500 } } }}
+        slotProps={{
+          primary: { sx: { fontWeight: selected ? 600 : 500 } },
+        }}
       />
     </ListItemButton>
   );
@@ -90,48 +98,53 @@ export function Sidebar({ projectId, onNavigate }: SidebarProps) {
       <ProjectSwitcher projectId={projectId} onNavigate={onNavigate} />
 
       <Box sx={{ flex: 1, overflowY: "auto" }}>
-        {base && (
-          <List
-            dense
-            disablePadding
-            subheader={
-              <ListSubheader
-                disableSticky
-                sx={{
-                  bgcolor: "transparent",
-                  typography: "overline",
-                  color: "text.muted",
-                  lineHeight: 2.5,
-                }}
-              >
-                Project
-              </ListSubheader>
-            }
-          >
-            <NavItem
-              to={`${base}/backlog`}
-              label="Backlog"
-              icon={<FormatListBulleted fontSize="small" />}
-              selected={pathname.startsWith(`${base}/backlog`)}
-              onNavigate={onNavigate}
-            />
-            <NavItem
-              to={`${base}/board`}
-              label="Active Sprint"
-              icon={<ViewKanbanOutlined fontSize="small" />}
-              selected={pathname.startsWith(`${base}/board`)}
-              onNavigate={onNavigate}
-            />
-            <NavItem
-              to={`${base}/sprints`}
-              label="Sprints"
-              icon={<History fontSize="small" />}
-              selected={pathname.startsWith(`${base}/sprints`)}
-              onNavigate={onNavigate}
-            />
-          </List>
-        )}
-        {base && <Divider sx={{ my: 1.5 }} />}
+        <List
+          dense
+          disablePadding
+          subheader={
+            <ListSubheader
+              disableSticky
+              sx={{
+                bgcolor: "transparent",
+                typography: "overline",
+                color: "text.muted",
+                lineHeight: 2.5,
+              }}
+            >
+              Project
+            </ListSubheader>
+          }
+        >
+          <NavItem
+            to={base ? `${base}/backlog` : "/projects"}
+            label="Backlog"
+            icon={<FormatListBulleted fontSize="small" />}
+            selected={!!base && pathname.startsWith(`${base}/backlog`)}
+            disabled={!base}
+            onNavigate={onNavigate}
+          />
+
+          <NavItem
+            to={base ? `${base}/board` : "/projects"}
+            label="Active Sprint"
+            icon={<ViewKanbanOutlined fontSize="small" />}
+            selected={!!base && pathname.startsWith(`${base}/board`)}
+            disabled={!base}
+            onNavigate={onNavigate}
+          />
+
+          <NavItem
+            to={base ? `${base}/sprints` : "/projects"}
+            label="Sprints"
+            icon={<History fontSize="small" />}
+            selected={!!base && pathname.startsWith(`${base}/sprints`)}
+            disabled={!base}
+            onNavigate={onNavigate}
+          />
+        </List>
+
+        <Divider sx={{ my: 1.5 }} />
+
         <List dense disablePadding>
           <NavItem
             to="/projects"
