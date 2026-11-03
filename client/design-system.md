@@ -207,6 +207,21 @@ Board card: `Paper variant="outlined"` on `background.paper`, key in `mono` + `t
 
 ---
 
+### 8.5 Drag and drop and planned sprints (built on Day 4)
+Libraries: `@dnd-kit/core` + `@dnd-kit/sortable` (keyboard support built in). Only existing tokens are used; nothing here adds a colour.
+
+| Piece | Rule |
+|---|---|
+| Drag handle | `IconButton size="small"` with `DragIndicator`, colour `text.muted`, **first** control of a row, `aria-label="Drag KAN-12"`. Only the handle starts a drag; the rest of the row still opens the details. |
+| Row while dragged | The row stays in the list as a placeholder at `opacity 0.4`. |
+| Floating copy (`DragOverlay`) | `Paper elevation={4}` (shadow `md`), `1px` `primary.main` border, same cells as the row (`TodoRowCells`). |
+| Drop target | A list that holds a todo from another list gets an inset 2px `primary.main` ring (`cssVar.primary`), so it needs no layout shift. Empty lists are drop targets too and say how to fill them. |
+| Disabled | While backlog filters are active the handle is a disabled `IconButton` (tooltip with the reason) and an `Alert severity="info"` explains why and offers "Clear filters" (BL-6). |
+| Non-drag alternative | Every row's actions menu starts with "Move to top / bottom", then "Move to backlog" and "Move to <sprint>" (BL-5, BL-7). Moves are confirmed with a toast. |
+| Failed move | The cache is rolled back and an `error` toast names the todo and the server message. |
+
+Planned sprint section = `BacklogSection` with title `"<name> (planned)"`, summary `"Nov 3 – Nov 16 · 3 todos · 13 pts"` and actions `Edit` (outlined, inherit) and `Start sprint` (contained). When another sprint is active, `Start sprint` is disabled, its wrapper is focusable and carries a tooltip, and one `Alert severity="info"` above the sections explains why. `PlannedActionButton` is now used only for the two AI buttons (Day 6).
+
 ## 9. Responsive behaviour (NFR-4)
 
 Breakpoints (`tokens.breakpoints`): xs 0 · sm 600 · **md 768 (tablet)** · **lg 1024 (desktop)** · xl 1440.

@@ -151,7 +151,7 @@ export default function ProjectsPage() {
           <TextField
             type="search"
             size="small"
-            placeholder="Search projects…"
+            placeholder="Search projects . . ."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             slotProps={{

@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as projectsApi from "../api/projects";
 import type { CreateProjectRequest, UpdateProjectRequest } from "../types/api";
-
-// Query keys (implementation plan §3.4).
-export const projectsKey = ["projects"] as const;
-export const projectKey = (projectId: string) => ["project", projectId] as const;
+import { projectKey, projectsKey } from "./queryKeys";
 
 /** PRJ-1, PRJ-5: all projects of the user, recently updated first. */
 export function useProjects() {

@@ -58,7 +58,7 @@ export const QuickCreateRow = forwardRef<HTMLInputElement, QuickCreateRowProps>(
         inputRef={ref}
         fullWidth
         variant="standard"
-        placeholder="Type a title and press Enter"
+        placeholder="Add a new task or story . . . "
         value={value}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={handleKeyDown}

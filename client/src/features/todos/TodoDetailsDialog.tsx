@@ -387,7 +387,7 @@ export function TodoDetailsDialog({
                         <TextField
                           {...params}
                           label="Labels"
-                          placeholder="Type and press Enter"
+                          placeholder="Add a label . . ."
                           error={!!errors.labels}
                           helperText={errors.labels?.message ?? "Up to 10 labels."}
                         />

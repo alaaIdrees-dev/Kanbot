@@ -1,15 +1,14 @@
 import type {
   CreateTodoRequest,
+  MoveTodoRequest,
   Todo,
   TodoListQuery,
+  TodoListResponse,
   UpdateTodoRequest,
 } from "../types/api";
 import { request } from "./client";
 
-// `{ todo(s) }` envelopes are documented in the implementation plan §4.3 and are local to this module.
-interface TodoListResponse {
-  todos: Todo[];
-}
+// The `{ todo }` envelope is documented in the implementation plan §4.3 and is local to this module.
 interface TodoResponse {
   todo: Todo;
 }
@@ -39,3 +38,10 @@ export const updateTodo = async (todoId: string, data: UpdateTodoRequest): Promi
 /** BL-4. */
 export const deleteTodo = (todoId: string): Promise<void> =>
   request<void>("DELETE", `/todos/${todoId}`);
+
+/**
+ * BL-5, BL-7, SPR-5. `position` is the index in the target list *after removing the todo*
+ * (plan §3.5): never compute `order` on the client, the server renumbers.
+ */
+export const moveTodo = async (todoId: string, data: MoveTodoRequest): Promise<Todo> =>
+  (await request<TodoResponse>("POST", `/todos/${todoId}/move`, data)).todo;
