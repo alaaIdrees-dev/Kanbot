@@ -27,14 +27,28 @@ export interface SchemeTokens {
   error: { main: string; contrastText: string };
   info: { main: string; contrastText: string };
   /** Soft tinted backgrounds for chips / alerts. Text on them uses the matching `main` (checked ≥4.5:1). */
-  tint: { primary: string; ai: string; success: string; warning: string; error: string; info: string };
+  tint: {
+    primary: string;
+    ai: string;
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+  };
   /** Keys match the API enums so UI code can index with `todo.status` directly. */
   status: { todo: string; in_progress: string; in_review: string; done: string };
   priority: { low: string; medium: string; high: string; urgent: string };
   todoType: { task: string; story: string; bug: string };
   sprint: { planned: string; active: string; completed: string };
   /** Interaction overlays (hover / selected / focus) — translucent text colour so they work on any surface. */
-  action: { hover: string; selected: string; focus: string; disabled: string; disabledBackground: string; disabledText: string };
+  action: {
+    hover: string;
+    selected: string;
+    focus: string;
+    disabled: string;
+    disabledBackground: string;
+    disabledText: string;
+  };
 }
 
 export const schemes: Record<ColorScheme, SchemeTokens> = {
@@ -44,7 +58,13 @@ export const schemes: Record<ColorScheme, SchemeTokens> = {
     text: { primary: "#E8EAF0", secondary: "#AEB4C4", muted: "#838BA0" },
     border: { divider: "#242B3A", strong: "#2E3647", interactive: "#626B80" },
     primary: { main: "#818CF8", contrastText: "#14153A" },
-    ai: { main: "#F5A623", light: "#FFC766", dark: "#FFB640", contrastText: "#1A1203", text: "#F5A623" },
+    ai: {
+      main: "#F5A623",
+      light: "#FFC766",
+      dark: "#FFB640",
+      contrastText: "#1A1203",
+      text: "#F5A623",
+    },
     success: { main: "#4ADE80", contrastText: "#06210F" },
     warning: { main: "#FB923C", contrastText: "#2A1203" },
     error: { main: "#F2707F", contrastText: "#2A0A10" },
@@ -76,7 +96,13 @@ export const schemes: Record<ColorScheme, SchemeTokens> = {
     text: { primary: "#15181F", secondary: "#4B5468", muted: "#5B6475" },
     border: { divider: "#E1E4EA", strong: "#CBD0DB", interactive: "#7C8599" },
     primary: { main: "#4F46E5", contrastText: "#FFFFFF" },
-    ai: { main: "#C8780E", light: "#E09A3A", dark: "#D98A1F", contrastText: "#1A1203", text: "#9C5E00" },
+    ai: {
+      main: "#C8780E",
+      light: "#E09A3A",
+      dark: "#D98A1F",
+      contrastText: "#1A1203",
+      text: "#9C5E00",
+    },
     success: { main: "#166534", contrastText: "#FFFFFF" },
     warning: { main: "#9A4207", contrastText: "#FFFFFF" },
     error: { main: "#C22F49", contrastText: "#FFFFFF" },

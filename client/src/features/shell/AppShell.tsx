@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet, useMatch, useMatches } from "react-router-dom";
@@ -21,6 +21,9 @@ export function AppShell() {
   const [navOpen, setNavOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [metaSlot, setMetaSlot] = useState<HTMLElement | null>(null);
+
+  // Stable context value: an inline `{ open }` would re-render every consumer on each shell render.
+  const assistantContext = useMemo(() => ({ open: () => setAssistantOpen(true) }), []);
 
   const projectId = useMatch("/projects/:projectId/*")?.params.projectId;
   const matches = useMatches();
@@ -92,7 +95,7 @@ export function AppShell() {
           sx={{ flex: 1, overflow: "auto", outline: "none" }}
         >
           <TopBarSlotContext.Provider value={metaSlot}>
-            <AssistantDrawerContext.Provider value={{ open: () => setAssistantOpen(true) }}>
+            <AssistantDrawerContext.Provider value={assistantContext}>
               <Outlet />
             </AssistantDrawerContext.Provider>
           </TopBarSlotContext.Provider>

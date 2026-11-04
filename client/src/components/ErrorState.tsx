@@ -1,4 +1,5 @@
-import ErrorOutlined from "@mui/icons-material/ErrorOutlined";import { Box, Button, Typography } from "@mui/material";
+import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
+import { Box, Button, Typography } from "@mui/material";
 
 interface ErrorStateProps {
   /** The server's message (see implementation plan §4.2), shown as-is. */

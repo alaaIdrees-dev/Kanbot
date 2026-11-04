@@ -14,12 +14,7 @@ export class ApiError extends Error {
   readonly code: ApiErrorCode;
   readonly details?: ApiErrorDetail[];
 
-  constructor(
-    status: number,
-    code: ApiErrorCode,
-    message: string,
-    details?: ApiErrorDetail[],
-  ) {
+  constructor(status: number, code: ApiErrorCode, message: string, details?: ApiErrorDetail[]) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -102,11 +97,7 @@ function toApiError(error: unknown, path: string, options: RequestOptions): ApiE
 
   // No response at all: server down, CORS, offline.
   if (!axiosError.response) {
-    return new ApiError(
-      0,
-      "NETWORK_ERROR",
-      "Cannot reach the server. Is it running?",
-    );
+    return new ApiError(0, "NETWORK_ERROR", "Cannot reach the server. Is it running?");
   }
 
   const { status, data } = axiosError.response;
@@ -117,11 +108,7 @@ function toApiError(error: unknown, path: string, options: RequestOptions): ApiE
     data?.error?.details,
   );
 
-  if (
-    status === 401 &&
-    !PUBLIC_AUTH_PATHS.includes(path) &&
-    !options.skipUnauthorizedHandler
-  ) {
+  if (status === 401 && !PUBLIC_AUTH_PATHS.includes(path) && !options.skipUnauthorizedHandler) {
     unauthorizedHandler?.();
   }
   return apiError;

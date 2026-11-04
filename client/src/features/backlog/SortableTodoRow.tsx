@@ -1,4 +1,5 @@
 import DragIndicator from "@mui/icons-material/DragIndicator";
+import { useMemo } from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -30,6 +31,8 @@ export function SortableTodoRow({
   dragDisabledReason,
 }: SortableTodoRowProps) {
   const disabled = !!dragDisabledReason;
+  // A fresh `data` object on every render makes dnd-kit treat the item as changed each time.
+  const data = useMemo(() => ({ containerId }), [containerId]);
   const {
     attributes,
     listeners,
@@ -38,7 +41,7 @@ export function SortableTodoRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: todo.id, data: { containerId }, disabled });
+  } = useSortable({ id: todo.id, data, disabled });
 
   const handle = disabled ? (
     // A disabled button gets no pointer events, so the tooltip hangs on a wrapper.

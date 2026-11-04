@@ -3,15 +3,32 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
-import { Alert, Box, Button, CircularProgress, Link, Stack, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { ApiError, fieldErrors } from "../../api/client";
 import { AuthLayout } from "./AuthLayout";
 import { useAuth } from "./useAuth";
 
 const registerSchema = z
   .object({
-    name: z.string().trim().min(1, "Name is required").max(80, "Name must be at most 80 characters"),
-    email: z.string().trim().min(1, "Email is required").pipe(z.email("Enter a valid email address")),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Name is required")
+      .max(80, "Name must be at most 80 characters"),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Email is required")
+      .pipe(z.email("Enter a valid email address")),
     password: z.string().min(8, "Password must be at least 8 characters").max(200),
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })

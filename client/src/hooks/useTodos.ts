@@ -1,9 +1,11 @@
+import { useCallback } from "react";
 import {
   keepPreviousData,
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
+  type UseQueryResult,
 } from "@tanstack/react-query";
 import * as todosApi from "../api/todos";
 import { planMove, type CachedTodoList, type MoveVariables } from "../lib/todoLists";
@@ -74,41 +76,53 @@ export function useDeleteTodo(projectId: string) {
   });
 }
 
-/** What the planning lists need to know about one sprint's todo list. */
+/** Load state of one planned sprint's todo list. Plain data only (no functions), see below. */
 export interface SprintTodosState {
   sprintId: string;
-  todos: Todo[] | undefined;
   isPending: boolean;
   isError: boolean;
   error: Error | null;
-  refetch: () => void;
 }
 
 /**
- * SPR-1: one cached list per planned sprint, `['todos', projectId, { sprintId }]`. The sprint list
- * and the backlog load in parallel; these are the only dependent requests (we need the sprint ids
- * first), and each section renders on its own as soon as its list arrives.
+ * SPR-1: one cached list per planned sprint, `['todos', projectId, { sprintId }]`. This hook only
+ * DRIVES the fetching and reports load state; the todos themselves reach the planning store
+ * through `planningSync`. The result holds plain data only: a closure such as `refetch` would be a
+ * new value on every render, defeat TanStack's structural sharing, and hand every consumer a new
+ * array each time. Callers must pass a referentially stable `sprintIds` (memoise it).
  */
 export function useSprintTodos(
   projectId: string | undefined,
   sprintIds: readonly string[],
 ): SprintTodosState[] {
+  const combine = useCallback(
+    (results: UseQueryResult<Todo[], Error>[]): SprintTodosState[] =>
+      results.map((result, i) => ({
+        sprintId: sprintIds[i],
+        isPending: result.isPending,
+        isError: result.isError,
+        error: result.error,
+      })),
+    [sprintIds],
+  );
   return useQueries({
     queries: sprintIds.map((sprintId) => ({
       queryKey: todosKey(projectId ?? "", { sprintId }),
       queryFn: () => todosApi.listTodos(projectId!, { sprintId }),
       enabled: !!projectId,
     })),
-    combine: (results) =>
-      results.map((result, i) => ({
-        sprintId: sprintIds[i],
-        todos: result.data,
-        isPending: result.isPending,
-        isError: result.isError,
-        error: result.error,
-        refetch: () => void result.refetch(),
-      })),
+    combine,
   });
+}
+
+/** Retry for one sprint list (the combined state above carries no `refetch`). */
+export function useRefetchSprintTodos(projectId: string) {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (sprintId: string) =>
+      void queryClient.refetchQueries({ queryKey: todosKey(projectId, { sprintId }) }),
+    [queryClient, projectId],
+  );
 }
 
 export const MOVE_TODO_MUTATION_KEY = (projectId: string) => ["move-todo", projectId] as const;

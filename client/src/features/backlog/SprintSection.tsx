@@ -5,27 +5,23 @@ import { Box, Button, Skeleton, Tooltip, Typography } from "@mui/material";
 import { ErrorState } from "../../components/ErrorState";
 import { formatDateRange } from "../../lib/formatDate";
 import { formatPoints, plural } from "../../lib/pluralize";
-import { sumPoints } from "../../lib/todoLists";
 import type { SprintTodosState } from "../../hooks/useTodos";
-import type { Sprint, Todo } from "../../types/api";
+import { useIsListLoaded, useListTotals } from "../../stores/planningSelectors";
+import type { Sprint } from "../../types/api";
 import { BacklogSection } from "./BacklogSection";
-import { SortableTodoList } from "./SortableTodoList";
+import { PlanningList, type RowHandlers } from "./PlanningList";
 
 interface SprintSectionProps {
   sprint: Sprint;
   /** Load state of this sprint's todo list. */
   state: SprintTodosState | undefined;
-  /** Todos in display order (the cache, or the live drag preview). */
-  todos: Todo[];
-  /** Row ids in display order, including the live drag preview. */
-  ids: string[];
-  highlighted: boolean;
+  /** Handlers shared by every row of this sprint's list. */
+  rows: RowHandlers;
   /** The currently active sprint, if any: it blocks "Start sprint" (SPR-3). */
   activeSprint: Sprint | undefined;
   onEdit: (sprint: Sprint) => void;
   onStart: (sprint: Sprint) => void;
-  /** The rows (SortableTodoRow) for `ids`. */
-  children: ReactNode;
+  onRetry: (sprintId: string) => void;
 }
 
 /**
@@ -35,19 +31,18 @@ interface SprintSectionProps {
 export function SprintSection({
   sprint,
   state,
-  todos,
-  ids,
-  highlighted,
+  rows,
   activeSprint,
   onEdit,
   onStart,
-  children,
+  onRetry,
 }: SprintSectionProps) {
-  const loaded = !!state?.todos;
-  // Counts come from the list shown (so they follow optimistic moves); the sprint's own live
+  const loaded = useIsListLoaded(sprint.id);
+  const totals = useListTotals(sprint.id);
+  // Counts come from the store's list (so they follow optimistic moves); the sprint's own live
   // stats stand in while the list is still loading.
-  const count = loaded ? todos.length : sprint.stats.totalTodos;
-  const points = loaded ? sumPoints(todos) : sprint.stats.totalPoints;
+  const count = loaded ? totals.count : sprint.stats.totalTodos;
+  const points = loaded ? totals.points : sprint.stats.totalPoints;
   const dates = formatDateRange(sprint.startDate, sprint.endDate);
   const summary = [dates, `${count} ${plural(count, "todo", "todos")}`, formatPoints(points)]
     .filter(Boolean)
@@ -58,11 +53,11 @@ export function SprintSection({
     : undefined;
 
   let body: ReactNode;
-  if (!state || state.isPending) {
-    const rows = Math.min(Math.max(sprint.stats.totalTodos, 1), 5);
+  if (!state || state.isPending || (!loaded && !state.isError)) {
+    const skeletonRows = Math.min(Math.max(sprint.stats.totalTodos, 1), 5);
     body = (
       <Box role="status" aria-label={`Loading ${sprint.name}`} sx={{ p: 2 }}>
-        {Array.from({ length: rows }, (_, i) => (
+        {Array.from({ length: skeletonRows }, (_, i) => (
           <Skeleton key={i} variant="rounded" height={44} sx={{ mb: 1, borderRadius: 2 }} />
         ))}
       </Box>
@@ -72,26 +67,23 @@ export function SprintSection({
       <Box sx={{ p: 2 }}>
         <ErrorState
           message={state.error?.message ?? "Could not load this sprint."}
-          onRetry={state.refetch}
+          onRetry={() => onRetry(sprint.id)}
         />
       </Box>
     );
   } else {
     body = (
-      <SortableTodoList
+      <PlanningList
         containerId={sprint.id}
-        ids={ids}
         label={`${sprint.name} todos`}
-        highlighted={highlighted}
+        rows={rows}
         emptyContent={
           <Typography color="text.secondary" sx={{ px: 2, py: 3, textAlign: "center" }}>
             No todos in this sprint yet. Drag todos here, or use a todo’s actions menu to move it
             in.
           </Typography>
         }
-      >
-        {children}
-      </SortableTodoList>
+      />
     );
   }
 

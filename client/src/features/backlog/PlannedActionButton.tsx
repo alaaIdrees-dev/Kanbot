@@ -13,7 +13,11 @@ interface PlannedActionButtonProps extends Pick<ButtonProps, "color" | "variant"
  * is focusable so keyboard users can read the tooltip too (a disabled button can't take focus).
  * Replace it with a normal <Button onClick> when the feature lands.
  */
-export function PlannedActionButton({ children, reason, ...buttonProps }: PlannedActionButtonProps) {
+export function PlannedActionButton({
+  children,
+  reason,
+  ...buttonProps
+}: PlannedActionButtonProps) {
   return (
     <Tooltip title={reason}>
       <Box component="span" tabIndex={0} sx={{ display: "inline-flex", borderRadius: 2 }}>

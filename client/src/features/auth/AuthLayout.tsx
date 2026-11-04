@@ -16,7 +16,11 @@ export function AuthLayout({ title, children }: AuthLayoutProps) {
         variant="outlined"
         sx={{ width: "100%", maxWidth: 420, p: { xs: 3, sm: 4 }, borderRadius: 3 }}
       >
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "center" }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{ alignItems: "center", justifyContent: "center" }}
+        >
           <Box component="img" src={logoIcon} alt="" width={36} height={36} />
           <Typography variant="h5" component="p" sx={{ fontWeight: 700 }}>
             Kanbot

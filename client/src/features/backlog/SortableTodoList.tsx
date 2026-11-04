@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Box, List } from "@mui/material";
@@ -8,7 +8,7 @@ import { listDroppableId } from "./listDroppable";
 interface SortableTodoListProps {
   containerId: string;
   /** Row ids in display order (already includes the live drag preview). */
-  ids: string[];
+  ids: readonly string[];
   /** Accessible name of the list, e.g. "Sprint 4 todos". */
   label: string;
   /** True while a todo from ANOTHER list is held over this one. */
@@ -31,6 +31,8 @@ export function SortableTodoList({
   children,
 }: SortableTodoListProps) {
   const { setNodeRef } = useDroppable({ id: listDroppableId(containerId) });
+  // SortableContext wants a mutable array; copy only when the ids really changed.
+  const items = useMemo(() => [...ids], [ids]);
 
   return (
     <Box
@@ -41,7 +43,7 @@ export function SortableTodoList({
         transition: (theme) => theme.transitions.create("box-shadow"),
       }}
     >
-      <SortableContext id={containerId} items={ids} strategy={verticalListSortingStrategy}>
+      <SortableContext id={containerId} items={items} strategy={verticalListSortingStrategy}>
         <List disablePadding aria-label={label}>
           {children}
         </List>

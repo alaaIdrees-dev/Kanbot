@@ -10,7 +10,9 @@ import type { TodoPriority } from "../../types/api";
 export function PriorityBadge({ priority }: { priority: TodoPriority }) {
   const Icon = PRIORITY_ICON[priority];
   return (
-    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, color: `priority.${priority}` }}>
+    <Box
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, color: `priority.${priority}` }}
+    >
       <Icon fontSize="small" aria-hidden="true" />
       <Typography variant="caption" sx={{ color: "text.secondary" }}>
         {PRIORITY_LABEL[priority]}

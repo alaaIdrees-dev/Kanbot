@@ -222,46 +222,46 @@ export const theme = createTheme({
     MuiFormHelperText: { styleOverrides: { root: { marginLeft: 2, marginRight: 2 } } },
 
     // ── Feedback & display ──
-MuiAlert: {
-  styleOverrides: {
-    root: {
-      borderRadius: radius.lg,
-      alignItems: "center",
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: radius.lg,
+          alignItems: "center",
 
-      "&.MuiAlert-standardSuccess": {
-        backgroundColor: p("tint-success"),
-        color: p("text-primary"),
-        "& .MuiAlert-icon": {
-          color: p("success-main"),
-        },
-      },
+          "&.MuiAlert-standardSuccess": {
+            backgroundColor: p("tint-success"),
+            color: p("text-primary"),
+            "& .MuiAlert-icon": {
+              color: p("success-main"),
+            },
+          },
 
-      "&.MuiAlert-standardError": {
-        backgroundColor: p("tint-error"),
-        color: p("text-primary"),
-        "& .MuiAlert-icon": {
-          color: p("error-main"),
-        },
-      },
+          "&.MuiAlert-standardError": {
+            backgroundColor: p("tint-error"),
+            color: p("text-primary"),
+            "& .MuiAlert-icon": {
+              color: p("error-main"),
+            },
+          },
 
-      "&.MuiAlert-standardWarning": {
-        backgroundColor: p("tint-warning"),
-        color: p("text-primary"),
-        "& .MuiAlert-icon": {
-          color: p("warning-main"),
-        },
-      },
+          "&.MuiAlert-standardWarning": {
+            backgroundColor: p("tint-warning"),
+            color: p("text-primary"),
+            "& .MuiAlert-icon": {
+              color: p("warning-main"),
+            },
+          },
 
-      "&.MuiAlert-standardInfo": {
-        backgroundColor: p("tint-info"),
-        color: p("text-primary"),
-        "& .MuiAlert-icon": {
-          color: p("info-main"),
+          "&.MuiAlert-standardInfo": {
+            backgroundColor: p("tint-info"),
+            color: p("text-primary"),
+            "& .MuiAlert-icon": {
+              color: p("info-main"),
+            },
+          },
         },
       },
     },
-  },
-},
     MuiChip: {
       styleOverrides: {
         root: { borderRadius: radius.md, fontWeight: 500 },

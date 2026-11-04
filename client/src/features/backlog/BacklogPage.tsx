@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Add from "@mui/icons-material/Add";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
@@ -7,9 +7,10 @@ import { useSnackbar } from "notistack";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PageContainer } from "../../components/PageContainer";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import { useBacklogTodos, useCreateTodo, useDeleteTodo } from "../../hooks/useTodos";
+import { useCreateTodo, useDeleteTodo } from "../../hooks/useTodos";
 import { formatPoints, plural } from "../../lib/pluralize";
-import { sumPoints } from "../../lib/todoLists";
+import { BACKLOG } from "../../lib/todoLists";
+import { useIsBacklogLoaded, useListTotals } from "../../stores/planningSelectors";
 import type { Sprint, Todo } from "../../types/api";
 import { SprintFormDialog } from "../sprints/SprintFormDialog";
 import { StartSprintDialog } from "../sprints/StartSprintDialog";
@@ -55,8 +56,9 @@ export default function BacklogPage() {
   );
   const filtersActive = !!queryFilters.search || !!queryFilters.priority || !!queryFilters.type;
 
-  // The unfiltered backlog feeds the top-bar totals. It is the same cached query BacklogLists uses.
-  const { data: allTodos } = useBacklogTodos(projectId, {});
+  // Top-bar totals come from the planning store, so they follow optimistic moves.
+  const backlogLoaded = useIsBacklogLoaded();
+  const totals = useListTotals(BACKLOG);
 
   const createTodo = useCreateTodo(projectId ?? "");
   const deleteTodo = useDeleteTodo(projectId ?? "");
@@ -67,12 +69,13 @@ export default function BacklogPage() {
   const [sprintForm, setSprintForm] = useState<DialogState<Sprint>>({ key: 0, open: false });
   const [startDialog, setStartDialog] = useState<DialogState<Sprint>>({ key: 0, open: false });
 
-  if (!projectId) return null;
-
-  const openDetails = (todo: Todo) => {
+  // Stable identities: they reach every row through the shared row handlers.
+  const openDetails = useCallback((todo: Todo) => {
     setDialogKey((k) => k + 1);
     setSelectedTodo(todo);
-  };
+  }, []);
+
+  if (!projectId) return null;
 
   const openSprintForm = (sprint?: Sprint) =>
     setSprintForm((s) => ({ key: s.key + 1, open: true, target: sprint }));
@@ -111,16 +114,13 @@ export default function BacklogPage() {
     });
   };
 
-  const totalCount = allTodos?.length;
-  const totalPoints = allTodos ? sumPoints(allTodos) : undefined;
-
   return (
     <PageContainer>
       {/* Wireframe 04: totals sit next to the page title in the top bar. */}
-      {typeof totalCount === "number" && totalPoints !== undefined && (
+      {backlogLoaded && (
         <TopBarMeta>
           <Typography color="text.secondary" noWrap aria-live="polite">
-            {totalCount} {plural(totalCount, "todo", "todos")} · {formatPoints(totalPoints)}
+            {totals.count} {plural(totals.count, "todo", "todos")} · {formatPoints(totals.points)}
           </Typography>
         </TopBarMeta>
       )}

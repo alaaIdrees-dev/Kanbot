@@ -224,7 +224,8 @@ export function TodoDetailsDialog({
               noWrap
             >
               {TYPE_LABEL[current.type]}
-              {formatShortDate(current.createdAt) && ` · created ${formatShortDate(current.createdAt)}`}
+              {formatShortDate(current.createdAt) &&
+                ` · created ${formatShortDate(current.createdAt)}`}
             </Typography>
             <IconButton aria-label="Close todo details" onClick={requestClose} disabled={busy}>
               <Close />

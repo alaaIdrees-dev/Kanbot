@@ -29,7 +29,10 @@ export function EmptyState({ title, description, icon, action }: EmptyStateProps
       }}
     >
       {icon && (
-        <Box aria-hidden="true" sx={{ color: "text.muted", display: "flex", "& svg": { fontSize: 40 } }}>
+        <Box
+          aria-hidden="true"
+          sx={{ color: "text.muted", display: "flex", "& svg": { fontSize: 40 } }}
+        >
           {icon}
         </Box>
       )}

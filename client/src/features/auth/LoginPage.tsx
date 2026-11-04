@@ -3,7 +3,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
-import { Alert, Box, Button, CircularProgress, Link, Stack, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { ApiError, fieldErrors } from "../../api/client";
 import { AuthLayout } from "./AuthLayout";
 import { useAuth } from "./useAuth";
@@ -48,7 +57,9 @@ export default function LoginPage() {
   };
 
   const redirect = params.get("redirect");
-  const registerLink = redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register";
+  const registerLink = redirect
+    ? `/register?redirect=${encodeURIComponent(redirect)}`
+    : "/register";
 
   return (
     <AuthLayout title="Welcome back">
