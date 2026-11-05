@@ -1,6 +1,8 @@
 import type {
+  CompleteSprintRequest,
   CreateSprintRequest,
   Sprint,
+  SprintBoardResponse,
   SprintListResponse,
   StartSprintRequest,
   UpdateSprintRequest,
@@ -31,3 +33,14 @@ export const deleteSprint = (sprintId: string): Promise<void> =>
 /** SPR-3. Planned → active. 409 when another sprint of the project is already active. */
 export const startSprint = async (sprintId: string, data: StartSprintRequest): Promise<Sprint> =>
   (await request<SprintResponse>("POST", `/sprints/${sprintId}/start`, data)).sprint;
+
+/** SPR-4, SPR-7. The sprint plus its todos grouped by status column (works for any sprint status). */
+export const getSprintBoard = (sprintId: string): Promise<SprintBoardResponse> =>
+  request<SprintBoardResponse>("GET", `/sprints/${sprintId}/todos`);
+
+/** SPR-6. Active → completed; unfinished todos go to the backlog or a planned sprint. */
+export const completeSprint = async (
+  sprintId: string,
+  data: CompleteSprintRequest,
+): Promise<Sprint> =>
+  (await request<SprintResponse>("POST", `/sprints/${sprintId}/complete`, data)).sprint;

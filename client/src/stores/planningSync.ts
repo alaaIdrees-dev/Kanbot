@@ -4,10 +4,17 @@ import { BACKLOG } from "../lib/todoLists";
 import type { Sprint, Todo } from "../types/api";
 import { usePlanningStore, type ServerSnapshot } from "./planningStore";
 
-/** Only the UNFILTERED list queries feed the store: `{ sprintId }` and nothing else. */
+/**
+ * Only the UNFILTERED list queries feed the store: `{ sprintId }` and nothing else.
+ * Keys whose value is `undefined` don't count: the backlog query is stored as
+ * `{ sprintId: "backlog", search: undefined, priority: undefined, type: undefined }` when no
+ * filter is set (TanStack hashes it without them, but `Object.keys` still lists them).
+ */
 function isUnfilteredList(query: unknown): boolean {
   if (typeof query !== "object" || query === null) return false;
-  const keys = Object.keys(query);
+  const keys = Object.entries(query)
+    .filter(([, value]) => value !== undefined)
+    .map(([key]) => key);
   return keys.length === 1 && keys[0] === "sprintId";
 }
 

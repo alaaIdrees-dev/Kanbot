@@ -55,3 +55,17 @@ export function formatDateRange(start: string | null, end: string | null): strin
   if (to) return `Until ${DATE_ONLY_SHORT.format(to)}`;
   return "";
 }
+
+const DATE_TIME = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+/** "Nov 5, 2026, 3:42 PM" from an ISO timestamp, in the viewer's time zone. Returns "" for invalid input. */
+export function formatDateTime(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "" : DATE_TIME.format(date);
+}

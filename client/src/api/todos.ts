@@ -1,4 +1,6 @@
 import type {
+  BulkCreateTodosRequest,
+  BulkCreateTodosResponse,
   CreateTodoRequest,
   MoveTodoRequest,
   Todo,
@@ -45,3 +47,10 @@ export const deleteTodo = (todoId: string): Promise<void> =>
  */
 export const moveTodo = async (todoId: string, data: MoveTodoRequest): Promise<Todo> =>
   (await request<TodoResponse>("POST", `/todos/${todoId}/move`, data)).todo;
+
+/** AI-2. Saves the drafts the user kept, in one request (1–50 todos, appended to the backlog). */
+export const bulkCreateTodos = async (
+  projectId: string,
+  data: BulkCreateTodosRequest,
+): Promise<Todo[]> =>
+  (await request<BulkCreateTodosResponse>("POST", `/projects/${projectId}/todos/bulk`, data)).todos;

@@ -7,6 +7,10 @@ import type { TodoListQuery } from "../types/api";
 export const projectsKey = ["projects"] as const;
 export const projectKey = (projectId: string) => ["project", projectId] as const;
 export const sprintsKey = (projectId: string) => ["sprints", projectId] as const;
+/** SPR-4, SPR-7: one sprint with its todos grouped by status (`GET /sprints/:id/todos`). */
+export const boardKey = (sprintId: string) => ["board", sprintId] as const;
+/** AI-5: `GET /ai/status`, fetched once per session. */
+export const aiStatusKey = ["ai-status"] as const;
 export const todosKey = (projectId: string, query: TodoListQuery) =>
   ["todos", projectId, query] as const;
 
@@ -16,12 +20,14 @@ export const projectTodosPredicate = (projectId: string) => (q: { queryKey: read
 
 /**
  * Todo lists AND the aggregates derived from them: `project.stats.backlogCount` (backlog header,
- * "N of total") and each sprint's live `stats`. Every todo mutation must refresh all three.
+ * "N of total"), each sprint's live `stats`, and the cached sprint boards. Every todo mutation must refresh all three.
  */
 export function invalidateTodoData(queryClient: QueryClient, projectId: string) {
   return Promise.all([
     queryClient.invalidateQueries({ predicate: projectTodosPredicate(projectId) }),
     queryClient.invalidateQueries({ queryKey: projectKey(projectId) }),
     queryClient.invalidateQueries({ queryKey: sprintsKey(projectId) }),
+    // Boards are keyed by sprint, not project; only the ones on screen actually refetch.
+    queryClient.invalidateQueries({ queryKey: ["board"] }),
   ]);
 }

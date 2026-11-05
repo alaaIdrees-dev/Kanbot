@@ -10,6 +10,7 @@ import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useCreateTodo, useDeleteTodo } from "../../hooks/useTodos";
 import { formatPoints, plural } from "../../lib/pluralize";
 import { BACKLOG } from "../../lib/todoLists";
+import { useAiUiStore } from "../../stores/aiUiStore";
 import { useIsBacklogLoaded, useListTotals } from "../../stores/planningSelectors";
 import type { Sprint, Todo } from "../../types/api";
 import { SprintFormDialog } from "../sprints/SprintFormDialog";
@@ -18,7 +19,6 @@ import { TodoDetailsDialog } from "../todos/TodoDetailsDialog";
 import { TopBarMeta } from "../shell/TopBarMeta";
 import { BacklogFilters, type BacklogFilterValues } from "./BacklogFilters";
 import { BacklogLists } from "./BacklogLists";
-import { PlannedActionButton } from "./PlannedActionButton";
 
 const EMPTY_FILTERS: BacklogFilterValues = { search: "", priority: "", type: "" };
 
@@ -137,22 +137,22 @@ export default function BacklogPage() {
       >
         <BacklogFilters values={filters} onChange={setFilters} />
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1.5, ml: "auto" }}>
-          <PlannedActionButton
+          <Button
             variant="outlined"
             color="ai"
             startIcon={<AutoAwesome />}
-            reason="Generating todos with AI arrives with the AI day (Day 6)"
+            onClick={() => useAiUiStore.getState().openGenerate()}
           >
             Generate todos with AI
-          </PlannedActionButton>
-          <PlannedActionButton
+          </Button>
+          <Button
             variant="outlined"
             color="ai"
             startIcon={<AutoAwesome />}
-            reason="Planning a sprint with AI arrives with the AI day (Day 6)"
+            onClick={() => useAiUiStore.getState().openPlan()}
           >
             Plan sprint with AI
-          </PlannedActionButton>
+          </Button>
           <Button
             variant="outlined"
             color="inherit"

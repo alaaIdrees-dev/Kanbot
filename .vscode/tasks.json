@@ -30,6 +30,18 @@
 			"type": "shell",
 			"command": "npm install --prefix client @mui/material @emotion/react @emotion/styled",
 			"isBackground": false
+		},
+		{
+			"label": "Temporary server smoke verification",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"server",
+				"run",
+				"smoke"
+			],
+			"isBackground": false
 		}
 	]
 }

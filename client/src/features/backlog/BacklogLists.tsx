@@ -14,6 +14,7 @@ import { useBacklogTodos, useRefetchSprintTodos, useSprintTodos } from "../../ho
 import { usePlanningSync } from "../../hooks/usePlanningSync";
 import { formatPoints, plural } from "../../lib/pluralize";
 import { BACKLOG, sumPoints } from "../../lib/todoLists";
+import { useAiUiStore } from "../../stores/aiUiStore";
 import {
   useActiveSprint,
   useDragMeta,
@@ -24,7 +25,6 @@ import {
   useTodo,
 } from "../../stores/planningSelectors";
 import type { Sprint, Todo, TodoListQuery } from "../../types/api";
-import { useAssistantDrawer } from "../shell/AssistantDrawerContext";
 import { BacklogSection } from "./BacklogSection";
 import { PlanningList, type RowHandlers } from "./PlanningList";
 import { QuickCreateRow } from "./QuickCreateRow";
@@ -74,7 +74,6 @@ export function BacklogLists({
   onQuickCreate,
   quickCreateRef,
 }: BacklogListsProps) {
-  const assistant = useAssistantDrawer();
   usePlanningSync(projectId);
 
   // ───────────── Fetching (Query) ─────────────
@@ -160,16 +159,14 @@ export function BacklogLists({
                 >
                   Create a todo
                 </Button>
-                {assistant && (
-                  <Button
-                    variant="outlined"
-                    color="ai"
-                    startIcon={<AutoAwesome />}
-                    onClick={assistant.open}
-                  >
-                    Generate with AI
-                  </Button>
-                )}
+                <Button
+                  variant="outlined"
+                  color="ai"
+                  startIcon={<AutoAwesome />}
+                  onClick={() => useAiUiStore.getState().openGenerate()}
+                >
+                  Generate with AI
+                </Button>
               </Box>
             }
           />
@@ -290,26 +287,31 @@ export function BacklogLists({
         )}
       </Stack>
 
-      {/* The floating copy that follows the pointer; the row itself stays as a dimmed placeholder. */}
-      <DragOverlay>
+      {/* The floating copy that follows the pointer; the row itself stays as a dimmed placeholder.
+          No drop animation: the store has already moved the row, and the animation would keep a
+          cloned copy of the overlay mounted (with a setState ref) while the lists re-render. */}
+      <DragOverlay dropAnimation={null}>
         {draggedTodo ? (
-          <Paper
-            elevation={4}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              py: 1.25,
-              px: 1.5,
-              border: "1px solid",
-              borderColor: "primary.main",
-              borderRadius: 2,
-              cursor: "grabbing",
-            }}
-          >
-            <DragIndicator fontSize="small" aria-hidden="true" sx={{ color: "text.muted" }} />
-            <TodoRowCells todo={draggedTodo} />
-          </Paper>
+          <div style={{ pointerEvents: "none" }}>
+            <Paper
+              elevation={4}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                py: 1.25,
+                px: 1.5,
+                border: "1px solid",
+                borderColor: "primary.main",
+                borderRadius: 2,
+                cursor: "grabbing",
+                backgroundColor: "background.paper", // لتجنب الشفافية أثناء السحب
+              }}
+            >
+              <DragIndicator fontSize="small" aria-hidden="true" sx={{ color: "text.secondary" }} />
+              <TodoRowCells todo={draggedTodo} />
+            </Paper>
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>

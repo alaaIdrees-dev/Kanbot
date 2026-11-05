@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet, useMatch, useMatches } from "react-router-dom";
 import { layout } from "../../design/tokens";
 import { titleOf } from "../../lib/routeHandle";
+import { useAiUiStore } from "../../stores/aiUiStore";
+import { AiDialogs } from "../ai/AiDialogs";
 import { AssistantDrawer } from "./AssistantDrawer";
-import { AssistantDrawerContext } from "./AssistantDrawerContext";
 import { TopBarSlotContext } from "./TopBarSlotContext";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -19,13 +20,19 @@ export function AppShell() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   const [navOpen, setNavOpen] = useState(false);
-  const [assistantOpen, setAssistantOpen] = useState(false);
   const [metaSlot, setMetaSlot] = useState<HTMLElement | null>(null);
 
-  // Stable context value: an inline `{ open }` would re-render every consumer on each shell render.
-  const assistantContext = useMemo(() => ({ open: () => setAssistantOpen(true) }), []);
-
   const projectId = useMatch("/projects/:projectId/*")?.params.projectId;
+
+  // AI-1: the conversation belongs to one project; opening another project starts a new one.
+  useEffect(() => {
+    const ai = useAiUiStore.getState();
+    if (projectId) ai.syncProject(projectId);
+    else ai.closeAll(); // the AI UI only exists on project pages; the chat itself is kept
+  }, [projectId]);
+  // Logging out (the shell unmounts) drops the conversation and any open AI UI.
+  useEffect(() => () => useAiUiStore.getState().reset(), []);
+
   const matches = useMatches();
   const title =
     [...matches]
@@ -85,7 +92,7 @@ export function AppShell() {
           title={title}
           showMenuButton={!isDesktop}
           onOpenMenu={() => setNavOpen(true)}
-          onAskAi={projectId ? () => setAssistantOpen(true) : undefined}
+          onAskAi={projectId ? () => useAiUiStore.getState().openAssistant() : undefined}
           metaSlotRef={setMetaSlot}
         />
         <Box
@@ -95,15 +102,16 @@ export function AppShell() {
           sx={{ flex: 1, overflow: "auto", outline: "none" }}
         >
           <TopBarSlotContext.Provider value={metaSlot}>
-            <AssistantDrawerContext.Provider value={assistantContext}>
-              <Outlet />
-            </AssistantDrawerContext.Provider>
+            <Outlet />
           </TopBarSlotContext.Provider>
         </Box>
       </div>
 
       {projectId && (
-        <AssistantDrawer open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+        <>
+          <AssistantDrawer projectId={projectId} />
+          <AiDialogs projectId={projectId} />
+        </>
       )}
     </div>
   );

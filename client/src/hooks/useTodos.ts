@@ -8,8 +8,16 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import * as todosApi from "../api/todos";
+import { removeFromBoard } from "../lib/boardColumns";
 import { planMove, type CachedTodoList, type MoveVariables } from "../lib/todoLists";
-import type { CreateTodoRequest, Todo, TodoListQuery, UpdateTodoRequest } from "../types/api";
+import type {
+  BulkCreateTodosRequest,
+  CreateTodoRequest,
+  SprintBoardResponse,
+  Todo,
+  TodoListQuery,
+  UpdateTodoRequest,
+} from "../types/api";
 import { invalidateTodoData, projectTodosPredicate, todosKey } from "./queryKeys";
 
 /** BL-1, BL-6: the backlog, optionally filtered by search/priority/type. */
@@ -32,6 +40,15 @@ export function useCreateTodo(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateTodoRequest) => todosApi.createTodo(projectId, data),
+    onSuccess: () => invalidateTodoData(queryClient, projectId),
+  });
+}
+
+/** AI-2. Saves the checked drafts; the backlog list and the counters refresh through invalidation. */
+export function useBulkCreateTodos(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkCreateTodosRequest) => todosApi.bulkCreateTodos(projectId, data),
     onSuccess: () => invalidateTodoData(queryClient, projectId),
   });
 }
@@ -65,10 +82,16 @@ export function useDeleteTodo(projectId: string) {
             data.filter((t) => t.id !== todoId),
           );
       }
-      return { snapshots };
+      // The sprint boards (SPR-4) hold the same todos grouped by status.
+      await queryClient.cancelQueries({ queryKey: ["board"] });
+      const boards = queryClient.getQueriesData<SprintBoardResponse>({ queryKey: ["board"] });
+      for (const [key, board] of boards) {
+        if (board) queryClient.setQueryData(key, removeFromBoard(board, todoId));
+      }
+      return { snapshots, boards };
     },
     onError: (_err, _todoId, context) => {
-      for (const [key, data] of context?.snapshots ?? []) {
+      for (const [key, data] of [...(context?.snapshots ?? []), ...(context?.boards ?? [])]) {
         queryClient.setQueryData(key, data);
       }
     },
