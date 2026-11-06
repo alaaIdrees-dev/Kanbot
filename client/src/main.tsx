@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { RouterProvider } from "react-router-dom";
 import { AppSnackbarProvider } from "./components/AppSnackbarProvider";
-import { AuthProvider } from "./features/auth/AuthProvider";
+import { AuthProvider } from "./features/auth";
 import { queryClient } from "./lib/queryClient";
 import { theme } from "./lib/theme";
 import { router } from "./router";

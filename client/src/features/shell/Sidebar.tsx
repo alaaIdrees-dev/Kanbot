@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/kanbot-icon.svg";
-import { useAuth } from "../auth/useAuth";
+import { useAuth } from "../auth";
 import { ProjectSwitcher } from "./ProjectSwitcher";
 
 interface NavItemProps {

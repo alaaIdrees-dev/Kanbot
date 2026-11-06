@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import * as authApi from "../../api/auth";
+import * as authApi from "./api/authApi";
 import { ApiError, setTokenProvider, setUnauthorizedHandler } from "../../api/client";
 import type { LoginRequest, RegisterRequest, User } from "../../types/api";
 import {

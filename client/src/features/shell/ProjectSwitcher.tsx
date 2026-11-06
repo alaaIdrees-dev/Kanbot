@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
-import { useProject, useProjects } from "../../hooks/useProjects";
+import { useProject, useProjects } from "../projects";
 
 interface ProjectSwitcherProps {
   projectId: string | undefined;

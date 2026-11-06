@@ -2,9 +2,9 @@ import type { ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { FullPageLoader } from "./components/FullPageLoader";
 import { NotFoundPage } from "./components/NotFoundPage";
-import { GuestRoute } from "./features/auth/GuestRoute";
-import { ProtectedRoute } from "./features/auth/ProtectedRoute";
-import { ProjectRoute } from "./features/projects/ProjectRoute";
+import { GuestRoute } from "./features/auth/router/GuestRoute";
+import { ProtectedRoute } from "./features/auth/router/ProtectedRoute";
+import { ProjectRoute } from "./features/projects/router/ProjectRoute";
 import { AppShell } from "./features/shell/AppShell";
 import type { RouteHandle } from "./lib/routeHandle";
 
@@ -26,8 +26,8 @@ export const router = createBrowserRouter([
     element: <GuestRoute />,
     HydrateFallback: FullPageLoader,
     children: [
-      { path: "/login", lazy: page(() => import("./features/auth/LoginPage")) },
-      { path: "/register", lazy: page(() => import("./features/auth/RegisterPage")) },
+      { path: "/login", lazy: page(() => import("./features/auth/pages/LoginPage")) },
+      { path: "/register", lazy: page(() => import("./features/auth/pages/RegisterPage")) },
     ],
   },
   {
@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
           { path: "/", element: <Navigate to="/projects" replace /> },
           {
             path: "/projects",
-            lazy: page(() => import("./features/projects/ProjectsPage")),
+            lazy: page(() => import("./features/projects/pages/ProjectsPage")),
             handle: title("Projects"),
           },
           {
@@ -50,29 +50,29 @@ export const router = createBrowserRouter([
               { index: true, element: <Navigate to="backlog" replace /> },
               {
                 path: "backlog",
-                lazy: page(() => import("./features/backlog/BacklogPage")),
+                lazy: page(() => import("./features/backlog/pages/BacklogPage")),
                 handle: title("Backlog"),
               },
               {
                 path: "board",
-                lazy: page(() => import("./features/board/BoardPage")),
+                lazy: page(() => import("./features/board/pages/BoardPage")),
                 handle: title("Active sprint"),
               },
               {
                 // Master-detail (wireframe 10): the list stays, the selected sprint renders beside it.
                 path: "sprints",
-                lazy: page(() => import("./features/sprints/SprintsPage")),
+                lazy: page(() => import("./features/sprints/pages/SprintsPage")),
                 handle: title("Sprints"),
                 children: [
                   {
                     index: true,
                     lazy: async () => ({
-                      Component: (await import("./features/sprints/SprintsPage")).SprintDetailsHint,
+                      Component: (await import("./features/sprints/pages/SprintsPage")).SprintDetailsHint,
                     }),
                   },
                   {
                     path: ":sprintId",
-                    lazy: page(() => import("./features/sprints/SprintDetailsPage")),
+                    lazy: page(() => import("./features/sprints/pages/SprintDetailsPage")),
                   },
                 ],
               },
