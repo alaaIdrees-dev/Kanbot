@@ -1,7 +1,7 @@
 # Kanbot Design System
 
 > **Single source of truth for UI decisions.** Read this before creating or styling any component or page, and update it in the same change whenever tokens or shared components change.
-> It documents only what exists in the code today (see §14 for what is intentionally *not* built yet).
+> It documents only what exists in the code today (see §14 for known limitations).
 
 Requirements this serves: [REQUIREMENTS](../docs/REQUIREMENTS.en.md) §1.4 (design is our choice), NFR-2/3/4/5/9 · [IMPLEMENTATION-PLAN](../docs/IMPLEMENTATION-PLAN.en.md) §2 (UI library: our choice), §3.2 (`components/` = design-system pieces, `lib/` = constants).
 
@@ -79,7 +79,7 @@ Values live in `tokens.ts` (`schemes.dark`, `schemes.light`). Do not copy hex va
 
 ## 5. Accessibility: contrast audit (WCAG 2.2 AA)
 
-Computed with the WCAG relative-luminance formula directly from `tokens.ts`: **178 pairs checked, 0 failing** (`npm run check:contrast` → `scripts/check-contrast.mjs`; re-run it after any colour change).
+Computed with the WCAG relative-luminance formula directly from `tokens.ts`: **238 pairs checked, 0 failing** (`npm run check:contrast` → `scripts/check-contrast.mjs`, needs Node ≥ 22.6; re-run it after any colour change).
 
 Rules applied:
 - **Text** (1.4.3) ≥ **4.5:1**: text.primary/secondary/muted on all four surfaces; primary and ai.text as text on all surfaces; success/warning/error/info as text; button labels on their fills (incl. `ai.dark` hover); coloured text on its tint; `text.primary` on every tint.
@@ -176,11 +176,9 @@ Theme-level behaviour you get for free:
 | `AppSnackbarProvider` | `children` | Mounted in `main.tsx`. Toast from anywhere: `useSnackbar().enqueueSnackbar("Saved", { variant: "success" })`. Icon + accent bar per variant. |
 | `FullPageLoader`, `FullPageError`, `NotFoundPage` | (existing) | Unchanged; they pick up the theme automatically. |
 | `PageContainer` | `children` | Standard page padding + max width (`layout.pageMaxWidth`) inside the app shell. |
-| `PlaceholderPage` | `title`, `projectsLink?` | Stand-in for screens built on later days (backlog, board, sprints). |
 | `PointsBadge` (`features/todos`) | `points: StoryPoints \| null` | Story points pill: "5 pts", "1 pt", or "–" when not estimated. Rows (Day 3), board cards (Day 5). |
 | `BacklogSection` (`features/backlog`) | `title`, `summary`, `actions?`, `children` | Collapsible group of todo rows with a sunken header band (wireframe 04). Day 4 reuses it for planned sprints (`actions` = Edit / Start sprint). |
 | `TopBarMeta` (`features/shell`) | `children` | Portals small metadata next to the page title in the top bar (e.g. backlog totals "18 todos · 42 pts"). Needs the `TopBarSlotContext` provided by `AppShell`. |
-| `PlannedActionButton` (`features/backlog`) | `reason`, Button props | Disabled toolbar action from a wireframe whose feature lands on a later day; tooltip says when. Replace with a normal `Button` when built. |
 
 ### 8.3 Domain visuals — contract (built in the feature days)
 `PriorityBadge`, `TypeIcon`, `PointsSelect` are built in `features/todos` (plan Day 3), `SprintProgress` in `features/board`, etc. They must follow the contract:
@@ -202,8 +200,8 @@ function PriorityBadge({ priority }: { priority: TodoPriority }) {
 ```
 Rule: marker colour on the icon only; the **label text uses `text.secondary`** (marker colours are only guaranteed 3:1, not 4.5:1).
 
-### 8.4 Draft guidance for upcoming screens (not implemented)
-Board card: `Paper variant="outlined"` on `background.paper`, key in `mono` + `text.muted`, title `body1`, footer row with type icon, priority icon, points chip; hover = border → `border.interactive`; drag state = `shadow.md` + primary outline. Column: `sunken` surface, 288px wide. AI drawer: `Drawer` 400px, header with an `ai` badge ("Mock AI" when `mode === "mock"`), user messages on `tint.primary`, assistant messages on `background.paper` with a small `ai` marker. These are guidelines for Days 3–6, not shipped code.
+### 8.4 Guidance the board and AI screens were built from
+Board card: `Paper variant="outlined"` on `background.paper`, key in `mono` + `text.muted`, title `body1`, footer row with type icon, priority icon, points chip; hover = border → `border.interactive`; drag state = `shadow.md` + primary outline. Column: `sunken` surface, 288px wide. AI drawer: `Drawer` 400px, header with an `ai` badge ("Mock AI" when `mode === "mock"`), user messages on `tint.primary`, assistant messages on `background.paper` with a small `ai` marker. The board (`features/board`) and assistant (`features/ai`) follow it.
 
 ---
 
@@ -220,7 +218,7 @@ Libraries: `@dnd-kit/core` + `@dnd-kit/sortable` (keyboard support built in). On
 | Non-drag alternative | Every row's actions menu starts with "Move to top / bottom", then "Move to backlog" and "Move to <sprint>" (BL-5, BL-7). Moves are confirmed with a toast. |
 | Failed move | The cache is rolled back and an `error` toast names the todo and the server message. |
 
-Planned sprint section = `BacklogSection` with title `"<name> (planned)"`, summary `"Nov 3 – Nov 16 · 3 todos · 13 pts"` and actions `Edit` (outlined, inherit) and `Start sprint` (contained). When another sprint is active, `Start sprint` is disabled, its wrapper is focusable and carries a tooltip, and one `Alert severity="info"` above the sections explains why. `PlannedActionButton` is now used only for the two AI buttons (Day 6).
+Planned sprint section = `BacklogSection` with title `"<name> (planned)"`, summary `"Nov 3 – Nov 16 · 3 todos · 13 pts"` and actions `Edit` (outlined, inherit) and `Start sprint` (contained). When another sprint is active, `Start sprint` is disabled, its wrapper is focusable and carries a tooltip, and one `Alert severity="info"` above the sections explains why.
 
 ## 9. Responsive behaviour (NFR-4)
 
@@ -264,9 +262,7 @@ Before creating or changing UI: (1) read the relevant requirement IDs, (2) read 
 - Every new view ships loading, empty and error states (NFR-2) and works at 1024 / 768 (NFR-4).
 - Changing a token or shared component = update code **and** this document in the same commit, and re-run the contrast audit for colour changes.
 
-## 14. Known limitations / not built yet
-- **Build, lint and TypeScript were not run** for this change: the review environment had no network/`node_modules`. Run `npm run build && npm run lint` and fix anything they report; the colour audit is the only check that was executed.
-- Not verified: `colorSchemeSelector: "data-theme"` generating `[data-theme="light"]` selectors on MUI v9.5 (see README "Verify after pulling").
-- Visual QA in a browser (both themes) is still to do.
-- Not implemented: board components, planned-sprint sections and drag handles in the backlog (Day 4), assistant drawer, Markdown/code-block styling for AI replies (requires `react-markdown`, not installed), drag-and-drop visuals (requires dnd-kit, not installed).
+## 14. Known limitations
+- **Build, lint and TypeScript were not run for the Day 7 review** (that environment had no network and no `node_modules`). Run `npm run lint && npm run build` and fix anything they report. The only automated check that was executed is the colour audit (§5).
+- Not verified without a browser: `colorSchemeSelector: "data-theme"` generating `[data-theme="light"]` selectors on MUI v9.5 (see README "Verify after pulling"), rendered hover/focus/selected colour pairings, forced-colours mode, screen-reader behaviour, focus-not-obscured (2.4.11) and target sizes (2.5.8). Run axe or Lighthouse on both themes.
 - Fonts: DM Sans loads from Google Fonts (existing behaviour); mono uses system fonts.

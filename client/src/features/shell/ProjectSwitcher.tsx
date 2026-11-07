@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 import Check from "@mui/icons-material/Check";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import GridViewOutlined from "@mui/icons-material/GridViewOutlined";
 import {
   Box,
@@ -57,8 +58,14 @@ export function ProjectSwitcher({ projectId, onNavigate }: ProjectSwitcherProps)
         aria-expanded={anchor ? "true" : undefined}
         aria-label={`Switch project. Current: ${label}`}
         onClick={(e) => setAnchor(e.currentTarget)}
+        startIcon={<FolderOutlined fontSize="small" />}
         endIcon={<ArrowDropDown />}
-        sx={{ justifyContent: "space-between", textAlign: "left", fontWeight: 500 }}
+        sx={{
+          justifyContent: "flex-start",
+          textAlign: "left",
+          fontWeight: 500,
+          "& .MuiButton-endIcon": { ml: "auto" },
+        }}
       >
         <Box
           component="span"

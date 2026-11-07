@@ -1,8 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
-import { Box, CircularProgress, Paper, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Paper, Typography } from "@mui/material";
+import { parseDraftTodos } from "../../../lib/chatDrafts";
 import { useAiStatus } from "../hooks/useAi";
-import type { ChatEntry } from "../store/aiUiStore";
+import { useAiUiStore, type ChatEntry } from "../store/aiUiStore";
 import { AiErrorAlert } from "./AiErrorAlert";
 import { AiMarkdown } from "./AiMarkdown";
 
@@ -60,7 +61,15 @@ export function ChatMessages({ messages, sending, error, onRetry }: ChatMessages
     <Box
       role="log"
       aria-label="Conversation with the assistant"
-      sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: "auto",
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.5,
+      }}
     >
       {messages.length === 0 && (
         <Typography color="text.secondary">
@@ -70,21 +79,52 @@ export function ChatMessages({ messages, sending, error, onRetry }: ChatMessages
         </Typography>
       )}
 
-      {messages.map((message) =>
-        message.role === "user" ? (
-          <UserBubble key={message.id} content={message.content} />
-        ) : (
-          <AssistantBubble key={message.id}>
-            <AiMarkdown>{message.content}</AiMarkdown>
-          </AssistantBubble>
-        ),
+      {messages.length > 0 && (
+        <Typography variant="caption" color="text.secondary" sx={{ alignSelf: "flex-start" }}>
+          Today
+        </Typography>
       )}
+
+      {messages.map((message) => {
+        if (message.role === "user")
+          return <UserBubble key={message.id} content={message.content} />;
+        // Wireframe 07: a reply that lists draft todos offers to review them before saving.
+        const drafts = parseDraftTodos(message.content);
+        return (
+          <Box key={message.id} sx={{ display: "grid", gap: 1 }}>
+            <AssistantBubble>
+              <AiMarkdown>{message.content}</AiMarkdown>
+            </AssistantBubble>
+            {drafts.length > 0 && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="ai"
+                sx={{ justifySelf: "flex-start", ml: 4 }}
+                onClick={() => {
+                  const ui = useAiUiStore.getState();
+                  ui.closeAssistant();
+                  ui.openGenerate(drafts);
+                }}
+              >
+                Review &amp; add to backlog
+              </Button>
+            )}
+          </Box>
+        );
+      })}
 
       {sending && (
         <AssistantBubble>
           <Box
             role="status"
-            sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.75, color: "text.secondary" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              py: 0.75,
+              color: "text.secondary",
+            }}
           >
             <CircularProgress size={14} color="inherit" aria-hidden />
             <Typography variant="body2">Thinking…</Typography>

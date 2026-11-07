@@ -3,7 +3,15 @@ import Add from "@mui/icons-material/Add";
 import FolderOpen from "@mui/icons-material/FolderOpen";
 import SearchOff from "@mui/icons-material/SearchOff";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import { Box, Button, InputAdornment, Skeleton, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  ButtonBase,
+  InputAdornment,
+  Skeleton,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import { EmptyState } from "../../../components/EmptyState";
@@ -28,6 +36,8 @@ export default function ProjectsPage() {
   const deleteProject = useDeleteProject();
 
   const [formTarget, setFormTarget] = useState<FormTarget>(null);
+  // Separate from the target, so the dialog keeps its title and labels while it fades out.
+  const [formOpen, setFormOpen] = useState(false);
   // Remounts the dialog on every open so the form starts from fresh values.
   const [formKey, setFormKey] = useState(0);
   const [toDelete, setToDelete] = useState<ProjectWithStats | null>(null);
@@ -36,6 +46,7 @@ export default function ProjectsPage() {
   const openForm = (target: Exclude<FormTarget, null>) => {
     setFormKey((k) => k + 1);
     setFormTarget(target);
+    setFormOpen(true);
   };
 
   const visible = useMemo(() => {
@@ -47,7 +58,7 @@ export default function ProjectsPage() {
   }, [projects, search]);
 
   const handleSaved = (project: ProjectWithStats, mode: "create" | "edit") => {
-    setFormTarget(null);
+    setFormOpen(false);
     if (mode === "create") {
       enqueueSnackbar(`Project “${project.name}” created`, { variant: "success" });
       navigate(`/projects/${project.id}/backlog`); // PRJ-2: open the new project's backlog
@@ -130,6 +141,33 @@ export default function ProjectsPage() {
             />
           </li>
         ))}
+        {/* Wireframe 03: a dashed "+ New project" tile closes the grid. */}
+        <li>
+          <ButtonBase
+            onClick={() => openForm({ mode: "create" })}
+            sx={{
+              width: "100%",
+              height: "100%",
+              minHeight: 176,
+              gap: 1,
+              borderRadius: 3,
+              border: "2px dashed",
+              borderColor: "border.strong",
+              color: "text.secondary",
+              font: "inherit",
+              "&:hover, &:focus-visible": {
+                borderColor: "primary.main",
+                color: "text.primary",
+                bgcolor: "surface.sunken",
+              },
+            }}
+          >
+            <Add fontSize="small" />
+            <Typography component="span" sx={{ fontWeight: 600 }}>
+              New project
+            </Typography>
+          </ButtonBase>
+        </li>
       </ul>
     );
   }
@@ -151,7 +189,7 @@ export default function ProjectsPage() {
           <TextField
             type="search"
             size="small"
-            placeholder="Search projects . . ."
+            placeholder="Search projects…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             slotProps={{
@@ -183,9 +221,9 @@ export default function ProjectsPage() {
 
       <ProjectFormDialog
         key={formKey}
-        open={!!formTarget}
+        open={formOpen}
         project={formTarget?.mode === "edit" ? formTarget.project : undefined}
-        onClose={() => setFormTarget(null)}
+        onClose={() => setFormOpen(false)}
         onSaved={handleSaved}
       />
 

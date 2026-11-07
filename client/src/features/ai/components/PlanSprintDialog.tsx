@@ -16,6 +16,7 @@ import {
   DialogTitle,
   Divider,
   LinearProgress,
+  MenuItem,
   Paper,
   Skeleton,
   Stack,
@@ -27,6 +28,7 @@ import { ApiError, fieldErrors } from "../../../api/client";
 import { usePlanSprint } from "../hooks/useAi";
 import { useCreateSprint } from "../../sprints";
 import { useBacklogTodos } from "../../backlog";
+import { addDays, todayDateOnly } from "../../../lib/dateOnly";
 import { plural } from "../../../lib/pluralize";
 import type { PlanSprintResponse } from "../../../types/api";
 import { PointsBadge } from "../../todos";
@@ -47,6 +49,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const GOAL_MAX = 300;
+/** Wireframe 09 "Sprint length". The plan endpoint has no length, so it only sets the new sprint's dates. */
+const SPRINT_WEEKS = [1, 2, 3, 4] as const;
+const DEFAULT_WEEKS = 2;
 const FIELDS = ["capacity", "focus"] as const;
 
 interface GenerateState {
@@ -76,6 +81,7 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
   const backlog = useBacklogTodos(projectId);
 
   const [result, setResult] = useState<GenerateState | null>(null);
+  const [weeks, setWeeks] = useState<number>(DEFAULT_WEEKS);
   const [goal, setGoal] = useState("");
   const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set());
   const [planError, setPlanError] = useState<string | null>(null);
@@ -153,8 +159,11 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
   const create = async () => {
     setCreateError(null);
     try {
+      const startDate = todayDateOnly();
       const sprint = await createSprint.mutateAsync({
         goal: goal.trim(),
+        startDate,
+        endDate: addDays(startDate, weeks * 7),
         todoIds: chosen.map((todo) => todo.id),
       });
       enqueueSnackbar(
@@ -201,6 +210,21 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
               sx={{ width: 200 }}
               {...register("capacity")}
             />
+            <TextField
+              select
+              label="Sprint length"
+              size="small"
+              value={weeks}
+              disabled={suggesting || creating}
+              onChange={(event) => setWeeks(Number(event.target.value))}
+              sx={{ width: 150 }}
+            >
+              {SPRINT_WEEKS.map((w) => (
+                <MenuItem key={w} value={w}>
+                  {w} {plural(w, "week", "weeks")}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Focus (optional)"
               placeholder="e.g. finish user profile"
@@ -253,7 +277,9 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
                 fullWidth
                 disabled={creating}
                 error={goalTooLong}
-                helperText={goalTooLong ? `The goal must be at most ${GOAL_MAX} characters` : undefined}
+                helperText={
+                  goalTooLong ? `The goal must be at most ${GOAL_MAX} characters` : undefined
+                }
               />
 
               <Box
@@ -269,9 +295,17 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
                     Selected backlog todos
                   </Typography>
                   {backlog.isPending ? (
-                    <Skeleton variant="rounded" height={160} role="status" aria-label="Loading backlog" />
+                    <Skeleton
+                      variant="rounded"
+                      height={160}
+                      role="status"
+                      aria-label="Loading backlog"
+                    />
                   ) : backlog.isError ? (
-                    <AiErrorAlert message={backlog.error.message} onRetry={() => void backlog.refetch()} />
+                    <AiErrorAlert
+                      message={backlog.error.message}
+                      onRetry={() => void backlog.refetch()}
+                    />
                   ) : suggested.length === 0 ? (
                     <Alert severity="info">
                       No backlog todo fits that capacity. Estimate more todos or raise the capacity.
@@ -316,7 +350,14 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
                         ))}
                       </Box>
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2, px: 2, py: 1.25, bgcolor: "surface.sunken" }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          px: 2,
+                          py: 1.25,
+                          bgcolor: "surface.sunken",
+                        }}
                       >
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           Total
@@ -335,7 +376,12 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
                     </Paper>
                   )}
                   {missing > 0 && !backlog.isPending && (
-                    <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      component="p"
+                      sx={{ mt: 0.5 }}
+                    >
                       {missing} suggested {plural(missing, "todo is", "todos are")} no longer in the
                       backlog and {plural(missing, "was", "were")} left out.
                     </Typography>
@@ -346,19 +392,26 @@ export function PlanSprintDialog({ open, projectId, onClose }: PlanSprintDialogP
                   <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
                     Why this plan?
                   </Typography>
-                  <Paper variant="outlined" sx={{ borderRadius: 2, p: 2, bgcolor: "surface.sunken" }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ borderRadius: 2, p: 2, bgcolor: "surface.sunken" }}
+                  >
                     <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
                       {result.plan.reasoning}
                     </Typography>
                   </Paper>
                 </Box>
               </Box>
-              {createError && <AiErrorAlert message={createError} onRetry={() => void create()} disabled={busy} />}
+              {createError && (
+                <AiErrorAlert message={createError} onRetry={() => void create()} disabled={busy} />
+              )}
             </>
           )}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
+      <DialogActions
+        sx={{ px: 3, pb: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}
+      >
         <AiDisclaimer />
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button color="inherit" variant="outlined" onClick={onClose} disabled={busy}>

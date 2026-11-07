@@ -53,7 +53,7 @@ export function CompleteSprintDialog({
   const complete = useCompleteSprint(projectId);
   const { data: sprints } = useSprints(projectId);
   const [destination, setDestination] = useState(BACKLOG_VALUE);
-  const [withSummary, setWithSummary] = useState(false);
+  const [withSummary, setWithSummary] = useState(true); // wireframe 11: checked by default
   const [error, setError] = useState<string | null>(null);
 
   const planned = (sprints ?? []).filter((s) => s.status === "planned");
@@ -127,8 +127,8 @@ export function CompleteSprintDialog({
               label="Generate AI summary"
             />
             <FormHelperText>
-              The assistant writes the summary on the sprint page after it is completed. AI can make
-              mistakes. Review before relying on it.
+              Opens the summary in Sprints history. AI can make mistakes. Review before relying on
+              it.
             </FormHelperText>
           </FormControl>
         </Stack>

@@ -52,6 +52,8 @@ const FIELDS = ["prompt", "count"] as const;
 interface GenerateTodosDialogProps {
   open: boolean;
   projectId: string;
+  /** Drafts to review straight away, e.g. the todos listed in an assistant reply (wireframe 07). */
+  initialDrafts?: DraftTodo[];
   onClose: () => void;
 }
 
@@ -63,14 +65,21 @@ const toDrafts = (todos: DraftTodo[]): Draft[] =>
  * saved before "Add N to backlog" (`POST …/todos/bulk`). The parent remounts the dialog on every open
  * (`key`), so the form and the drafts always start empty.
  */
-export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosDialogProps) {
+export function GenerateTodosDialog({
+  open,
+  projectId,
+  initialDrafts,
+  onClose,
+}: GenerateTodosDialogProps) {
   const titleId = useId();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const generate = useGenerateTodos(projectId);
   const bulkCreate = useBulkCreateTodos(projectId);
 
-  const [drafts, setDrafts] = useState<Draft[] | null>(null);
+  const [drafts, setDrafts] = useState<Draft[] | null>(() =>
+    initialDrafts && initialDrafts.length > 0 ? toDrafts(initialDrafts) : null,
+  );
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -132,9 +141,12 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
     }));
     try {
       await bulkCreate.mutateAsync({ todos });
-      enqueueSnackbar(`${todos.length} ${plural(todos.length, "todo", "todos")} added to the backlog`, {
-        variant: "success",
-      });
+      enqueueSnackbar(
+        `${todos.length} ${plural(todos.length, "todo", "todos")} added to the backlog`,
+        {
+          variant: "success",
+        },
+      );
       onClose();
       navigate(`/projects/${projectId}/backlog`); // AI-2: show them in the backlog
     } catch (error) {
@@ -171,9 +183,7 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
                 helperText={errors.prompt?.message}
                 {...register("prompt")}
               />
-              <Box
-                sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 2 }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 2 }}>
                 <TextField
                   label="How many todos"
                   type="number"
@@ -197,11 +207,7 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
                   color="ai"
                   disabled={busy}
                   startIcon={
-                    generating ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <AutoAwesome />
-                    )
+                    generating ? <CircularProgress size={16} color="inherit" /> : <AutoAwesome />
                   }
                 >
                   {generating ? "Generating…" : drafts ? "Regenerate" : "Generate"}
@@ -230,7 +236,14 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
             <>
               <Divider />
               <Box>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
                   <Typography variant="h6" component="h3">
                     Suggested todos ({drafts.length})
                   </Typography>
@@ -249,7 +262,8 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
                 </Box>
                 {drafts.length === 0 ? (
                   <Alert severity="info">
-                    The assistant did not suggest any todos. Try describing the feature in more detail.
+                    The assistant did not suggest any todos. Try describing the feature in more
+                    detail.
                   </Alert>
                 ) : (
                   <Stack spacing={1}>
@@ -265,12 +279,16 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
                   </Stack>
                 )}
               </Box>
-              {saveError && <AiErrorAlert message={saveError} onRetry={() => void save()} disabled={busy} />}
+              {saveError && (
+                <AiErrorAlert message={saveError} onRetry={() => void save()} disabled={busy} />
+              )}
             </>
           )}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
+      <DialogActions
+        sx={{ px: 3, pb: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}
+      >
         <Typography variant="body2" color="text.secondary" aria-live="polite">
           {drafts && drafts.length > 0
             ? `${selected.length} of ${drafts.length} selected · ${formatPoints(selectedPoints)} total`
@@ -286,9 +304,7 @@ export function GenerateTodosDialog({ open, projectId, onClose }: GenerateTodosD
             disabled={busy || selected.length === 0 || hasInvalidTitle}
             startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
           >
-            {saving
-              ? "Adding…"
-              : `Add ${selected.length} to backlog`}
+            {saving ? "Adding…" : `Add ${selected.length} to backlog`}
           </Button>
         </Box>
       </DialogActions>

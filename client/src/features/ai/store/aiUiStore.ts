@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatMessage } from "../../../types/api";
+import type { ChatMessage, DraftTodo } from "../../../types/api";
 
 /**
  * UI-only state of the AI features (plan §3.4: dialog open, chat messages stay out of the Query
@@ -27,11 +27,16 @@ interface DialogState {
   key: number;
 }
 
+interface GenerateDialogState extends DialogState {
+  /** Drafts read from a chat reply ("Review & add to backlog"); the dialog starts on them. */
+  initialDrafts?: DraftTodo[];
+}
+
 interface AiUiState {
   /** The project this state belongs to. Switching project resets it (AI-1). */
   projectId: string | null;
   assistantOpen: boolean;
-  generateDialog: DialogState;
+  generateDialog: GenerateDialogState;
   planDialog: DialogState;
   /** The sprint summary dialog on the board (AI-4). The board page renders it, so the sprint is known there. */
   summaryDialog: DialogState;
@@ -49,7 +54,8 @@ interface AiUiState {
   closeAll: () => void;
   openAssistant: () => void;
   closeAssistant: () => void;
-  openGenerate: () => void;
+  /** `drafts` pre-fills the review list (wireframe 07); without them the dialog starts empty. */
+  openGenerate: (drafts?: DraftTodo[]) => void;
   closeGenerate: () => void;
   openPlan: () => void;
   closePlan: () => void;
@@ -113,13 +119,14 @@ export const useAiUiStore = create<AiUiState>()((set, get) => ({
     })),
   openAssistant: () => set({ assistantOpen: true }),
   closeAssistant: () => set({ assistantOpen: false }),
-  openGenerate: () =>
-    set((s) => ({ generateDialog: { open: true, key: s.generateDialog.key + 1 } })),
+  openGenerate: (drafts) =>
+    set((s) => ({
+      generateDialog: { open: true, key: s.generateDialog.key + 1, initialDrafts: drafts },
+    })),
   closeGenerate: () => set((s) => ({ generateDialog: { ...s.generateDialog, open: false } })),
   openPlan: () => set((s) => ({ planDialog: { open: true, key: s.planDialog.key + 1 } })),
   closePlan: () => set((s) => ({ planDialog: { ...s.planDialog, open: false } })),
-  openSummary: () =>
-    set((s) => ({ summaryDialog: { open: true, key: s.summaryDialog.key + 1 } })),
+  openSummary: () => set((s) => ({ summaryDialog: { open: true, key: s.summaryDialog.key + 1 } })),
   closeSummary: () => set((s) => ({ summaryDialog: { ...s.summaryDialog, open: false } })),
 
   beginSend: (content) => {

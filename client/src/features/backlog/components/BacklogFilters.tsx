@@ -37,7 +37,7 @@ export function BacklogFilters({ values, onChange }: BacklogFiltersProps) {
       <TextField
         type="search"
         size="small"
-        placeholder="Search todos . . ."
+        placeholder="Search todos…"
         value={values.search}
         onChange={(event) => onChange({ ...values, search: event.target.value })}
         slotProps={{

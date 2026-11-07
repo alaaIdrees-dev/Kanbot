@@ -27,6 +27,7 @@ export function AiDialogs({ projectId }: { projectId: string }) {
           key={`generate-${generate.key}`}
           open={generate.open}
           projectId={projectId}
+          initialDrafts={generate.initialDrafts}
           onClose={() => useAiUiStore.getState().closeGenerate()}
         />
       )}

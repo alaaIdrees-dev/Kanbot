@@ -1,5 +1,6 @@
 import { useId, useState, type MouseEvent } from "react";
 import MoreVert from "@mui/icons-material/MoreVert";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
 import {
@@ -49,7 +50,22 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
         "&:focus-within": { borderColor: "border.interactive" },
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+        <Box
+          aria-hidden
+          sx={{
+            flexShrink: 0,
+            width: 40,
+            height: 40,
+            display: "grid",
+            placeItems: "center",
+            borderRadius: 2,
+            bgcolor: "tint.primary",
+            color: "primary.main",
+          }}
+        >
+          <FolderOutlined />
+        </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Link
             component={RouterLink}
