@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/kanbot-icon.svg";
+import { commitAllStaged } from "../../lib/pendingDeletes";
 import { useAuth } from "../auth";
 import { ProjectSwitcher } from "./ProjectSwitcher";
 
@@ -180,7 +181,8 @@ export function Sidebar({ projectId, onNavigate }: SidebarProps) {
         <Button
           size="small"
           color="inherit"
-          onClick={logout}
+          // An undoable delete still waiting for its toast must reach the server while the token exists.
+          onClick={() => void commitAllStaged().finally(logout)}
           startIcon={<LogoutOutlined fontSize="small" />}
         >
           Log out

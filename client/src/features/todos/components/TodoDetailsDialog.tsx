@@ -32,7 +32,8 @@ import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { PRIORITY_LABEL, STATUS_LABEL, TYPE_LABEL } from "../../../lib/constants";
 import { formatShortDate } from "../../../lib/formatDate";
 import { useSprints } from "../../sprints";
-import { useDeleteTodo, useUpdateTodo } from "../hooks/useTodoMutations";
+import { useUpdateTodo } from "../hooks/useTodoMutations";
+import { useUndoableDelete } from "../hooks/useUndoableDelete";
 import {
   TODO_PRIORITIES,
   TODO_STATUSES,
@@ -95,7 +96,7 @@ export function TodoDetailsDialog({
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { enqueueSnackbar } = useSnackbar();
   const updateTodo = useUpdateTodo(projectId);
-  const deleteTodo = useDeleteTodo(projectId);
+  const deleteWithUndo = useUndoableDelete(projectId);
   const { data: sprints } = useSprints(projectId);
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -177,19 +178,12 @@ export function TodoDetailsDialog({
     }
   };
 
+  // BL-4: the todo leaves the lists at once and a toast offers "Undo" (the DELETE waits for it).
   const confirmDeleteNow = () => {
-    deleteTodo.mutate(current.id, {
-      onSuccess: () => {
-        setConfirmDelete(false);
-        enqueueSnackbar(`“${current.title}” deleted`, { variant: "success" });
-        onDeleted?.(current.id);
-        onClose();
-      },
-      onError: (err) => {
-        setConfirmDelete(false);
-        enqueueSnackbar(err.message, { variant: "error" });
-      },
-    });
+    deleteWithUndo(current);
+    setConfirmDelete(false);
+    onDeleted?.(current.id);
+    onClose();
   };
 
   const sprintOptions = (sprints ?? []).filter((s) => s.status !== "completed");
@@ -458,12 +452,11 @@ export function TodoDetailsDialog({
             <strong>
               {current.key} — {current.title}
             </strong>{" "}
-            will be permanently deleted. This cannot be undone.
+            will be deleted. You can undo it for a few seconds afterwards.
           </>
         }
         confirmLabel="Delete todo"
         destructive
-        loading={deleteTodo.isPending}
         onConfirm={confirmDeleteNow}
         onClose={() => setConfirmDelete(false)}
       />

@@ -3,9 +3,14 @@ import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet, useMatch, useMatches } from "react-router-dom";
 import { layout } from "../../design/tokens";
+import { commitStagedOnPageHide } from "../../lib/pendingDeletes";
 import { titleOf } from "../../lib/routeHandle";
 import { useAiUiStore } from "../ai/store/aiUiStore";
 import { AiDialogs, AssistantDrawer } from "../ai";
+import { GlobalDialogs } from "./GlobalDialogs";
+import { CommandPalette } from "./palette/CommandPalette";
+import { useShellUiStore } from "./store/shellUiStore";
+import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { TopBarSlotContext } from "./TopBarSlotContext";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -31,6 +36,16 @@ export function AppShell() {
   }, [projectId]);
   // Logging out (the shell unmounts) drops the conversation and any open AI UI.
   useEffect(() => () => useAiUiStore.getState().reset(), []);
+
+  // Keyboard shortcuts (c, /, ?, g b…) and the command palette (Ctrl/⌘+K) work on every private page.
+  useGlobalShortcuts(projectId);
+  // Project dialogs (create todo, details) belong to one project: leaving it closes them.
+  useEffect(() => () => useShellUiStore.getState().reset(), [projectId]);
+  // Closing or reloading the tab inside an undo window must not lose the delete.
+  useEffect(() => {
+    window.addEventListener("pagehide", commitStagedOnPageHide);
+    return () => window.removeEventListener("pagehide", commitStagedOnPageHide);
+  }, []);
 
   const matches = useMatches();
   const title =
@@ -110,8 +125,10 @@ export function AppShell() {
         <>
           <AssistantDrawer projectId={projectId} />
           <AiDialogs projectId={projectId} />
+          <GlobalDialogs projectId={projectId} />
         </>
       )}
+      <CommandPalette projectId={projectId} />
     </div>
   );
 }

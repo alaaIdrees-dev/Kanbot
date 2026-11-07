@@ -14,8 +14,8 @@ import "./style.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      {/* Dark is the default colour scheme; the user's choice is persisted by MUI (design-system.md §4). */}
-      <ThemeProvider theme={theme} defaultMode="dark" disableTransitionOnChange>
+      {/* First visit follows the OS colour scheme ("system"); an explicit choice is persisted by MUI (design-system.md §4). */}
+      <ThemeProvider theme={theme} defaultMode="system" disableTransitionOnChange>
         <CssBaseline />
         <AppSnackbarProvider>
           <AuthProvider>

@@ -7,7 +7,7 @@ import { useSnackbar } from "notistack";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { PageContainer } from "../../../components/PageContainer";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
-import { useCreateTodo, useDeleteTodo } from "../../todos";
+import { useCreateTodo, useUndoableDelete } from "../../todos";
 import { formatPoints, plural } from "../../../lib/pluralize";
 import { BACKLOG } from "../../../lib/todoLists";
 import { useAiUiStore } from "../../ai/store/aiUiStore";
@@ -60,7 +60,7 @@ export default function BacklogPage() {
   const totals = useListTotals(BACKLOG);
 
   const createTodo = useCreateTodo(projectId ?? "");
-  const deleteTodo = useDeleteTodo(projectId ?? "");
+  const deleteWithUndo = useUndoableDelete(projectId ?? "");
 
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [dialogKey, setDialogKey] = useState(0);
@@ -98,19 +98,11 @@ export default function BacklogPage() {
     );
   };
 
+  // BL-4: the row disappears at once and a toast offers "Undo" (the DELETE waits for it).
   const confirmDelete = () => {
     if (!toDelete) return;
-    const { key, title } = toDelete;
-    deleteTodo.mutate(toDelete.id, {
-      onSuccess: () => {
-        setToDelete(null);
-        enqueueSnackbar(`${key} “${title}” deleted`, { variant: "success" });
-      },
-      onError: (err) => {
-        setToDelete(null);
-        enqueueSnackbar(err.message, { variant: "error" });
-      },
-    });
+    deleteWithUndo(toDelete);
+    setToDelete(null);
   };
 
   return (
@@ -211,7 +203,6 @@ export default function BacklogPage() {
       <ConfirmDialog
         open={!!toDelete}
         destructive
-        loading={deleteTodo.isPending}
         title="Delete todo?"
         confirmLabel="Delete todo"
         description={
@@ -219,7 +210,7 @@ export default function BacklogPage() {
             <strong>
               {toDelete?.key} — {toDelete?.title}
             </strong>{" "}
-            will be permanently deleted. This cannot be undone.
+            will be deleted. You can undo it for a few seconds afterwards.
           </>
         }
         onConfirm={confirmDelete}

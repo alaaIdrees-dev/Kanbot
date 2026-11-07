@@ -105,3 +105,51 @@ body {
   min-height: 100vh;
   margin: 0;
 }
+
+/*
+ * Motion (design-system.md §7). Keyframes live here because MUI/Tailwind only reference them by
+ * name. `prefers-reduced-motion` is honoured globally by the CssBaseline rule in lib/theme.ts,
+ * which shortens every animation and transition to ~0.
+ */
+
+/* Dialogs (and the command palette) rise and settle while their backdrop fades in. */
+@keyframes kb-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+/* A determinate progress bar grows from empty on mount; later value changes use the bar's transition. */
+@keyframes kb-progress-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/* The card/row under the pointer lifts when it is picked up (the floating drag preview). */
+@keyframes kb-lift {
+  from {
+    transform: scale(1) rotate(0deg);
+    box-shadow: none;
+  }
+  to {
+    transform: scale(1.025) rotate(1deg);
+  }
+}
+
+/* A todo that was just dropped (or moved from its menu) flashes once so the eye finds it. */
+@keyframes kb-settle {
+  0% {
+    box-shadow: 0 0 0 0 var(--mui-palette-primary-main);
+    background-color: var(--mui-palette-tint-primary);
+    transform: scale(1.02);
+  }
+  60% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+  }
+}

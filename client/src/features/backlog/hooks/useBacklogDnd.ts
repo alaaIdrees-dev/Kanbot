@@ -16,7 +16,12 @@ import {
   type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
+import { useUndoToast } from "../../../hooks/useUndoToast";
+import { useMotionStore } from "../../../lib/motionStore";
+import { invalidateTodoData } from "../../../lib/queryKeys";
+import * as todosApi from "../../todos/api/todosApi";
 
 import { usePlanningStore, type MoveHandlers } from "../store/planningStore";
 import { BACKLOG, type MoveVariables } from "../../../lib/todoLists";
@@ -38,6 +43,8 @@ const NO_ROWS: ReadonlySet<string> = new Set();
  */
 export function useBacklogDnd() {
   const { enqueueSnackbar } = useSnackbar();
+  const queryClient = useQueryClient();
+  const showUndoToast = useUndoToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -75,11 +82,43 @@ export function useBacklogDnd() {
     return lastOverId.current != null ? [{ id: lastOverId.current }] : [];
   }, []);
 
-  /** Error/success feedback shared by drops and the actions menu. */
+  /** Puts a todo back where it was ("Undo"). It goes through the planning queue like any move. */
+  const undoMove = useCallback(
+    (inverse: MoveVariables) => {
+      const store = usePlanningStore.getState();
+      const feedback = {
+        onSuccess: () => enqueueSnackbar("Move undone", { variant: "info" }),
+        onError: (error: Error) =>
+          enqueueSnackbar(`Couldn’t undo the move. ${error.message}`, { variant: "error" }),
+      };
+      if (store.todosById[inverse.todoId]) {
+        store.enqueueMove(inverse, feedback);
+        return;
+      }
+      // The planning page is gone (the toast outlives it): move on the server and refresh.
+      const projectId = store.projectId;
+      todosApi
+        .moveTodo(inverse.todoId, {
+          sprintId: inverse.sprintId,
+          status: inverse.status,
+          position: inverse.position,
+        })
+        .then(() => feedback.onSuccess())
+        .catch((error: unknown) => feedback.onError(error instanceof Error ? error : new Error("Something went wrong.")))
+        .finally(() => {
+          if (projectId) void invalidateTodoData(queryClient, projectId);
+        });
+    },
+    [enqueueSnackbar, queryClient],
+  );
+
+  /** Error/success feedback shared by drops and the actions menu. Success offers "Undo" (BL-5, BL-7). */
   const handlersFor = useCallback(
     (todo: Pick<Todo, "key">, successMessage?: string): MoveHandlers => ({
-      onSuccess: () => {
-        if (successMessage) enqueueSnackbar(successMessage, { variant: "success" });
+      onSuccess: (_saved, inverse) => {
+        if (!successMessage) return;
+        if (inverse) showUndoToast({ message: successMessage, onUndo: () => undoMove(inverse) });
+        else enqueueSnackbar(successMessage, { variant: "success" });
       },
       onError: (error, reason) =>
         enqueueSnackbar(
@@ -89,15 +128,17 @@ export function useBacklogDnd() {
           { variant: "error" },
         ),
     }),
-    [enqueueSnackbar],
+    [enqueueSnackbar, showUndoToast, undoMove],
   );
 
   /** The non-drag path (BL-5, BL-7): "Move to top", "Move to Sprint 4"… */
   const runMove = useCallback(
-    (todo: Todo, move: Omit<MoveVariables, "todoId">, successMessage?: string) =>
+    (todo: Todo, move: Omit<MoveVariables, "todoId">, successMessage?: string) => {
       usePlanningStore
         .getState()
-        .enqueueMove({ todoId: todo.id, ...move }, handlersFor(todo, successMessage)),
+        .enqueueMove({ todoId: todo.id, ...move }, handlersFor(todo, successMessage));
+      useMotionStore.getState().settle(todo.id);
+    },
     [handlersFor],
   );
 
@@ -123,7 +164,8 @@ export function useBacklogDnd() {
   }, []);
 
   const onDragEnd = useCallback(
-    ({ over }: DragEndEvent) => {
+    ({ active, over }: DragEndEvent) => {
+      useMotionStore.getState().settle(String(active.id));
       usePlanningStore.getState().dropDrag(
         over
           ? {
@@ -134,7 +176,9 @@ export function useBacklogDnd() {
         (move) =>
           handlersFor(
             move.todo,
-            move.changedList ? `${move.todo.key} moved to ${move.destinationName}` : undefined,
+            move.changedList
+              ? `${move.todo.key} moved to ${move.destinationName}`
+              : `${move.todo.key} reordered`,
           ),
       );
     },

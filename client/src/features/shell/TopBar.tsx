@@ -15,7 +15,13 @@ interface TopBarProps {
   metaSlotRef?: (node: HTMLElement | null) => void;
 }
 
-export function TopBar({ title, showMenuButton, onOpenMenu, onAskAi, metaSlotRef }: TopBarProps) {
+export function TopBar({
+  title,
+  showMenuButton,
+  onOpenMenu,
+  onAskAi,
+  metaSlotRef,
+}: TopBarProps) {
   return (
     <Box
       component="header"

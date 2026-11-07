@@ -7,12 +7,15 @@
     <meta name="description" content="Kanbot — your sprint board with an AI teammate." />
     <link rel="icon" type="image/svg+xml" href="./src/assets/kanbot-icon.svg" />
     <title>Kanbot</title>
-    <!-- Set the colour scheme before first paint (no light flash). Dark is the default; the key is MUI's mode storage. -->
+    <!-- Set the colour scheme before first paint (no flash). Stored choice (MUI's "mui-mode": light | dark | system) wins; with no choice (or "system") the OS preference decides. -->
     <script>
       (function () {
         var theme = "dark";
         try {
-          if (localStorage.getItem("mui-mode") === "light") theme = "light";
+          var mode = localStorage.getItem("mui-mode");
+          if (mode === "light" || mode === "dark") theme = mode;
+          else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches)
+            theme = "light";
         } catch (e) {}
         document.documentElement.setAttribute("data-theme", theme);
       })();

@@ -34,7 +34,7 @@ Demo account after `npm run seed`: `demo@kanbot.dev` / `password123`.
 | Layout utilities | **Tailwind v4**, tokens shared with MUI | One set of tokens for both; used for plain-element layout only. |
 | Icons | `@mui/icons-material` | Same family as the components. |
 | Colours | Indigo + green from the provided logo; amber reserved for AI | Matches the brand; amber makes AI features recognisable. |
-| Theme | **Dark by default**, full light theme, toggle remembered | Dark mode is an optional enhancement (requirements §9). |
+| Theme | Light, dark and **system** (follows the OS), choice remembered | Dark mode is an optional enhancement (requirements §9); see Enhancements below. |
 | Font | DM Sans (+ system monospace for todo keys) | Readable at dense sizes, no extra font to load. |
 
 Everything (tokens, themes, components, rules, contrast audit, known limitations) is in **[design-system.md](./design-system.md)**, the single source of truth for UI decisions.
@@ -53,7 +53,7 @@ src/
 ```
 
 - Server data lives in TanStack Query. Query keys are in `lib/queryKeys.ts`; mutations invalidate through `invalidateTodoData`.
-- Optimistic updates with rollback + toast for backlog/sprint moves, board moves and todo deletes.
+- Optimistic updates with rollback + toast for backlog/sprint moves and board moves; deletes are staged so they can be undone (see Enhancements).
 - Pages are code-split per route; the Markdown renderer and the two AI dialogs load on first use.
 - Only the JWT is stored client-side (`localStorage` key `kanbot.token`, in-memory fallback). It is never logged. AI Markdown is rendered with `skipHtml` and no `rehype-raw`.
 
@@ -78,13 +78,45 @@ src/
 
 ## Enhancements (requirements §9)
 
-Dark/light theme with a remembered toggle · contrast audit script · skip-to-content link · screen-reader announcements for drag and drop · "Move to top / bottom / sprint" menus as the non-drag path · touch drag with press-and-hold · route-level code splitting · project search · "hidden by the current filters" hint after quick-create.
+### UX & polish
+
+| Feature | What it does | Where |
+|---|---|---|
+| **Dark mode** | Light / Dark / System menu in the top bar. The first visit follows the OS (`prefers-color-scheme`) and keeps following it live while on "System"; an explicit choice is saved in `localStorage["mui-mode"]`. `index.html` applies it before first paint (no flash). The palette has the same options. | `components/ThemeToggle.tsx`, `index.html`, `main.tsx` |
+| **Keyboard shortcuts** | Keyboard only, no on-screen hints and no help dialog. `c` create todo (full dialog, with "Create another") · `/` focus search (from a page without one it goes to the backlog first) · `g b` board (also `g l` backlog, `g s` sprints, `g p` projects) · `Ctrl/⌘+K` command palette · `Ctrl/⌘+Z` undo while a toast shows. Single keys are ignored while typing, with a dialog or menu open, or with Ctrl/Alt/⌘ held. Letters also work on non-Latin layouts (Arabic…) through the physical key. | `features/shell/useGlobalShortcuts.ts`, `features/todos/components/CreateTodoDialog.tsx` |
+| **Command palette** | `Ctrl/⌘+K` (keyboard only). Jump to a project (keeps the current section), search todos of the current project (same server search as the backlog; opens the details on the page where the todo lives: board, backlog or sprint history), go to Backlog / Board / Sprints / Projects, and run actions: create todo, generate todos / plan sprint / ask AI, theme, log out. Arrow keys, Enter, Esc; combobox/listbox ARIA. | `features/shell/palette/CommandPalette.tsx` |
+| **Undo toast** | After a **delete** ("KAN-8 “…” deleted · Undo") and after a **move** (drag, menu, board; "KAN-3 moved to In Progress · Undo"). Undo restores the todo to its exact old place and status. Works from the toast button or `Ctrl/⌘+Z`. | `hooks/useUndoToast.tsx`, `lib/pendingDeletes.ts`, `features/backlog/hooks/useBacklogDnd.ts`, `features/board/hooks/useBoardDnd.ts` |
+| **Animations** | Dialogs and the palette rise and settle on open; the drag preview lifts and the board's glides into its slot; the todo that just landed flashes once; progress bars grow in and ease to each new value (green at 100%). All of it is off under `prefers-reduced-motion`. | `style.css`, `lib/theme.ts`, `lib/motionStore.ts` |
+
+How undo works, because the API has no "restore": a **move** is undone by sending the inverse move (the old list, status and position are recorded when the move is made). A **delete** is *staged*: the todo disappears from every list and board at once, but `DELETE /todos/:id` is only sent when the toast closes without "Undo". So undo is exact (same key, same position) and nothing is re-created. A refetch during the window can't bring the todo back (a cache guard strips it), and logging out or closing/reloading the tab sends the pending delete first (`fetch` with `keepalive` on page hide). The delete confirmation dialog stays (NFR-3).
+
+### Earlier enhancements
+
+Contrast audit script · skip-to-content link · screen-reader announcements for drag and drop · "Move to top / bottom / sprint" menus as the non-drag path · touch drag with press-and-hold · route-level code splitting · project search · "hidden by the current filters" hint after quick-create.
+
+## Deployment
+
+| Part | Host | URL |
+|---|---|---|
+| **Frontend** (this folder) | **Netlify** | transcendent-centaur-9582ed.netlify.app *(placeholder: replace with your site URL)* |
+| **Backend** (`kanbot/server`, unchanged) | **Render** (Web Service) | https://kanbot-e6mb.onrender.com/api *(placeholder: replace with your service URL)* |
+
+**Frontend on Netlify.** `netlify.toml` already holds the build (`npm run build`, publish `dist`, Node 22) and the single-page-app rewrite (`/* → /index.html`, so reloading `/projects/:id/board` works). Connect the repo with base directory `client`, then set one environment variable and deploy:
+
+```
+VITE_API_URL=https://kanbot-e6mb.onrender.com/api
+```
+
+Vite reads it at build time, so redeploy after changing it.
+
+**Backend on Render.** Create a Web Service from `server/` (build `npm install` plus its build step, start as in `server/package.json`) and copy the variables from `server/.env.example` (JWT secret, AI settings). Make sure the server allows the Netlify origin (CORS). Check `https://<your-service>.onrender.com/api/health`. Notes: on Render's free plan the service sleeps when idle (the first request after a pause is slow), and the JSON database in `server/data/db.json` lives on an ephemeral disk, so it resets on redeploy and you have to run `npm run seed` again for the demo account.
+
+> These two URLs are placeholders: the app has not been deployed from this repository yet. Replace them once the sites exist.
 
 ## Known issues
 
-- **Lint and build were not run in the Day 7 environment** (no network, so no `node_modules`). Static checks that *were* run: no unused imports, no unresolved relative imports, no `any`, no `console`, every external import is declared in `package.json`, and the colour audit passes. Run `npm run lint && npm run build` first and fix what they report.
-- Not tested in a browser: both themes, 1024 / 768 px layouts, keyboard-only flow, real AI provider (502 / 429 paths).
-- Verify that `colorSchemeSelector: "data-theme"` sets `data-theme="dark" | "light"` on `<html>` and switches the colours (see below).
+- `npm run lint` and `npm run build` pass. Prettier is not enforced: only the files added with the enhancements are Prettier-formatted.
+- The enhancements above were exercised in Chromium (59 scripted checks) against a stand-in for the API built from the documented contract, not against the real `kanbot/server`. Not tested in a browser: 768 px layout, real AI provider (502 / 429 paths), Firefox/Safari.
 - `ReactQueryDevtools` is mounted in `main.tsx`; it is stripped from production builds.
 - Dates use the viewer's time zone for timestamps and no time zone for date-only values (sprint and due dates).
 
@@ -95,7 +127,7 @@ npm install
 npm run check:contrast
 npm run lint
 npm run build
-npm run dev   # toggle the theme, or set localStorage "mui-mode" to "light"/"dark" and reload
+npm run dev   # toggle the theme (Light / Dark / System), try Ctrl+K
 ```
 
 Then run the QA checklist in plan §6 and record the demo: register → create project → generate todos with AI → plan sprint with AI → start sprint → move cards → complete sprint → AI summary.

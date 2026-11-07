@@ -195,6 +195,7 @@ export default function ProjectsPage() {
             slotProps={{
               htmlInput: {
                 "aria-label": "Search projects",
+                "data-kb-search": "",
               },
               input: {
                 startAdornment: (

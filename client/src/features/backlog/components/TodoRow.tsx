@@ -21,6 +21,7 @@ import {
   MenuItem,
   Typography,
 } from "@mui/material";
+import { SETTLE_ANIMATION, useIsSettling } from "../../../lib/motionStore";
 import { PointsBadge, PriorityBadge, TypeIcon } from "../../todos";
 import type { Todo } from "../../../types/api";
 
@@ -128,6 +129,7 @@ export function TodoRow({
 }: TodoRowProps) {
   const menuId = useId();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const settling = useIsSettling(todo.id);
 
   const openMenu = (event: MouseEvent<HTMLElement>) => setAnchor(event.currentTarget);
   const closeMenu = () => setAnchor(null);
@@ -192,6 +194,8 @@ export function TodoRow({
         borderColor: "divider",
         bgcolor: "background.paper",
         opacity: dragging ? 0.4 : 1,
+        transition: (theme) => theme.transitions.create("opacity", { duration: 120 }),
+        animation: settling ? SETTLE_ANIMATION : "none",
         "&:last-child": { borderBottom: "none" },
       }}
     >

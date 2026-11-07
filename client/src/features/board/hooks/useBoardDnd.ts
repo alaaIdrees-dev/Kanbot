@@ -18,6 +18,8 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useSnackbar } from "notistack";
+import { useUndoToast } from "../../../hooks/useUndoToast";
+import { useMotionStore } from "../../../lib/motionStore";
 import { useMoveBoardTodo } from "./useBoard";
 import { columnIds, type BoardColumns, type BoardMove } from "../../../lib/boardColumns";
 import { STATUS_LABEL } from "../../../lib/constants";
@@ -63,20 +65,49 @@ export function useBoardDnd(projectId: string, sprintId: string, columns: BoardC
       );
     },
   });
-  const { mutate } = move;
+  const { mutate, mutateAsync } = move;
+  const showUndoToast = useUndoToast();
+
+  /**
+   * Sends a move and, once the server accepted it, offers "Undo" (SPR-5). `mutateAsync` rather than
+   * per-call `mutate` callbacks: those are skipped when a newer move starts or the board unmounts,
+   * and the toast must appear for every move. Failures are reported by the hook (rollback + toast).
+   */
+  const moveWithUndo = useCallback(
+    (planned: BoardMove, inverse: BoardMove, message: string) => {
+      mutateAsync(planned).then(
+        () =>
+          showUndoToast({
+            message,
+            onUndo: () => {
+              mutateAsync(inverse).then(
+                () => enqueueSnackbar("Move undone", { variant: "info" }),
+                () => undefined, // rolled back and reported by the hook's onError
+              );
+            },
+          }),
+        () => undefined,
+      );
+    },
+    [mutateAsync, showUndoToast, enqueueSnackbar],
+  );
 
   /** The non-drag path (SPR-5): the card menu's "Move to In Review"… */
   const runMove = useCallback(
-    (todo: Todo, to: Omit<BoardMove, "todoId">, successMessage?: string) =>
-      mutate(
-        { todoId: todo.id, ...to },
-        {
-          onSuccess: () => {
-            if (successMessage) enqueueSnackbar(successMessage, { variant: "success" });
-          },
-        },
-      ),
-    [mutate, enqueueSnackbar],
+    (todo: Todo, to: Omit<BoardMove, "todoId">, successMessage?: string) => {
+      useMotionStore.getState().settle(todo.id);
+      const column = columnsRef.current[todo.status];
+      const inverse: BoardMove = {
+        todoId: todo.id,
+        status: todo.status,
+        position: Math.max(
+          column.findIndex((t) => t.id === todo.id),
+          0,
+        ),
+      };
+      moveWithUndo({ todoId: todo.id, ...to }, inverse, successMessage ?? `${todo.key} moved`);
+    },
+    [moveWithUndo],
   );
 
   // Prefer what the pointer is over; inside a column pick the nearest CARD (cards beat the column's
@@ -135,6 +166,8 @@ export function useBoardDnd(projectId: string, sprintId: string, columns: BoardC
   const onDragEnd = useCallback(
     ({ over }: DragEndEvent) => {
       const store = useBoardUiStore.getState();
+      // Where the card came from, read before the drop ends the preview.
+      const origin = store.drag;
       const planned = store.dropDrag(
         over
           ? {
@@ -143,9 +176,28 @@ export function useBoardDnd(projectId: string, sprintId: string, columns: BoardC
             }
           : null,
       );
-      if (planned) mutate(planned);
+      if (planned) useMotionStore.getState().settle(planned.todoId);
+      if (planned && origin) {
+        const todo = Object.values(columnsRef.current)
+          .flat()
+          .find((t) => t.id === planned.todoId);
+        const key = todo?.key ?? "Card";
+        moveWithUndo(
+          planned,
+          {
+            todoId: planned.todoId,
+            status: origin.origin,
+            position: origin.initial[origin.origin].indexOf(planned.todoId),
+          },
+          planned.status === origin.origin
+            ? `${key} reordered`
+            : `${key} moved to ${STATUS_LABEL[planned.status]}`,
+        );
+      } else if (planned) {
+        mutate(planned);
+      }
     },
-    [mutate],
+    [mutate, moveWithUndo],
   );
 
   const onDragCancel = useCallback(() => useBoardUiStore.getState().endDrag(), []);

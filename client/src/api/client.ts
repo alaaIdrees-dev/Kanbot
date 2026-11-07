@@ -89,6 +89,21 @@ export async function request<T>(
   }
 }
 
+/**
+ * Fire-and-forget request that survives the page being closed (`keepalive`). Only used to commit a
+ * pending, undoable delete when the tab is closed or reloaded; there is nobody left to show errors to.
+ */
+export function sendKeepalive(method: "DELETE", path: string): void {
+  const token = tokenProvider?.() ?? null;
+  if (!token) return;
+  const base = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "");
+  fetch(`${base}${path}`, {
+    method,
+    keepalive: true,
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => undefined);
+}
+
 function toApiError(error: unknown, path: string, options: RequestOptions): ApiError {
   if (!axios.isAxiosError(error)) {
     return new ApiError(0, "INTERNAL_ERROR", "Something went wrong.");

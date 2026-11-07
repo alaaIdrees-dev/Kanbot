@@ -43,7 +43,8 @@ export interface DragPreview {
 export type MoveFailure = "failed" | "discarded";
 
 export interface MoveHandlers {
-  onSuccess?: (saved: Todo) => void;
+  /** `inverse` is the move that puts the todo back where it was (for "Undo"); null if unknown. */
+  onSuccess?: (saved: Todo, inverse: MoveVariables | null) => void;
   /**
    * `failed`: this move was rejected (state is already rolled back).
    * `discarded`: an earlier move failed, so this one, built on top of it, was dropped unsent.
@@ -82,6 +83,8 @@ export interface ServerSnapshot {
 
 interface QueuedMove {
   variables: MoveVariables;
+  /** The move that undoes this one, computed from the lists as they were just before it. */
+  inverse: MoveVariables | null;
   /** Lists right after this move (becomes `confirmed` once the server accepts it). */
   after: Containers;
   handlers: MoveHandlers | undefined;
@@ -191,6 +194,28 @@ function applyMove(containers: Containers, move: MoveVariables): Containers {
   return result;
 }
 
+/**
+ * The move that puts a todo back where it is now. `position` follows the same rule as the forward
+ * move (index in the list without the todo; in a sprint, among the todos of its own status).
+ */
+function inverseOf(containers: Containers, todoId: string): MoveVariables | null {
+  for (const [container, list] of Object.entries(containers)) {
+    const index = list.findIndex((t) => t.id === todoId);
+    if (index < 0) continue;
+    const todo = list[index];
+    const inSprint = container !== BACKLOG;
+    return {
+      todoId,
+      sprintId: inSprint ? container : null,
+      status: todo.status,
+      position: inSprint
+        ? list.slice(0, index).filter((t) => t.status === todo.status).length
+        : index,
+    };
+  }
+  return null;
+}
+
 const toError = (value: unknown): Error =>
   value instanceof Error ? value : new Error("Something went wrong.");
 
@@ -239,7 +264,7 @@ export const usePlanningStore = create<PlanningState>()((set, get) => {
           });
           if (entry.epoch !== get().epoch) continue; // the page is gone; `reset` cleared the queue
           set((s) => ({ queue: s.queue.slice(1), confirmed: entry.after }));
-          entry.handlers?.onSuccess?.(saved);
+          entry.handlers?.onSuccess?.(saved, entry.inverse);
         } catch (cause) {
           if (entry.epoch !== get().epoch) continue;
           const error = toError(cause);
@@ -411,6 +436,7 @@ export const usePlanningStore = create<PlanningState>()((set, get) => {
       const after = applyMove(state.containers, variables);
       const entry: QueuedMove = {
         variables,
+        inverse: inverseOf(state.containers, variables.todoId),
         after,
         handlers,
         settle: state.settle,

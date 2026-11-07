@@ -23,6 +23,9 @@ import { SprintHeader } from "../components/SprintHeader";
 import { TodoCardBody } from "../components/TodoCard";
 import { useBoardDnd } from "../hooks/useBoardDnd";
 
+/** The floating card glides into its slot (a module constant: dnd-kit compares it by reference). */
+const DROP_ANIMATION = { duration: 200, easing: "cubic-bezier(0.16, 1, 0.3, 1)" };
+
 /** Module-level on purpose: an inline object is new on every render and makes dnd-kit re-measure. */
 const MEASURING = { droppable: { strategy: MeasuringStrategy.Always } };
 
@@ -161,11 +164,12 @@ function ActiveBoard({ projectId, sprintId }: { projectId: string; sprintId: str
             />
           ))}
         </Box>
-        <DragOverlay>
+        <DragOverlay dropAnimation={DROP_ANIMATION}>
           {draggedTodo ? (
             <Paper
               elevation={4}
               sx={{
+                animation: "kb-lift 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
                 p: 1.5,
                 border: "1px solid",
                 borderColor: "primary.main",

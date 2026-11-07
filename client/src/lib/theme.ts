@@ -169,10 +169,14 @@ export const theme = createTheme({
     MuiCard: { defaultProps: { variant: "outlined" } },
     MuiDialog: {
       styleOverrides: {
+        // The container is only a focus fallback (tabindex -1), not a control: no focus ring around it.
+        container: { outline: "none" },
         paper: {
           borderRadius: radius.xl,
           border: `1px solid ${p("divider")}`,
           backgroundColor: p("surface-raised"),
+          // Opening: rise + settle (keyframes in style.css). The container's own fade handles closing.
+          animation: `kb-dialog-in ${motion.duration.slow}ms ${motion.easing.out}`,
         },
       },
     },
@@ -279,6 +283,12 @@ export const theme = createTheme({
           height: 8,
           borderRadius: radius.pill,
           backgroundColor: p("border-strong"),
+          // Determinate bars: grow in on mount, then ease to every new value (a card dropped in
+          // Done moves the sprint bar). Nested selector so it beats MUI's own `linear` transition.
+          "&.MuiLinearProgress-determinate .MuiLinearProgress-bar": {
+            transition: `transform 700ms ${motion.easing.out}, background-color ${motion.duration.slow}ms ${motion.easing.inOut}`,
+            animation: `kb-progress-in 900ms ${motion.easing.out}`,
+          },
         },
         bar: { borderRadius: radius.pill },
       },

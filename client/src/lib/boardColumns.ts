@@ -93,6 +93,22 @@ export function removeFromBoard(board: SprintBoardResponse, todoId: string): Spr
   return withColumns(board, columns);
 }
 
+/** Undo of a delete: puts the card back at `index` of its column and the stats follow. */
+export function insertIntoBoard(
+  board: SprintBoardResponse,
+  todo: Todo,
+  index: number,
+): SprintBoardResponse {
+  if (allTodos(board.columns).some((t) => t.id === todo.id)) return board;
+  const target = board.columns[todo.status];
+  const at = clamp(index, 0, target.length);
+  const columns = {
+    ...board.columns,
+    [todo.status]: renumber([...target.slice(0, at), todo, ...target.slice(at)]),
+  };
+  return withColumns(board, columns);
+}
+
 /** SPR-7: share of the sprint that is done. Points when it has any, otherwise todos. */
 export function completionPercent(stats: SprintStats): number {
   if (stats.totalPoints > 0) return Math.round((stats.donePoints / stats.totalPoints) * 100);

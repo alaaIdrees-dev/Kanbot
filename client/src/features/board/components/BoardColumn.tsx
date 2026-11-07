@@ -34,14 +34,20 @@ function buildMoveActions(
       label: "Move to top",
       icon: <VerticalAlignTop fontSize="small" />,
       disabled: at <= 0,
-      onSelect: () => runMove(todo, { status: todo.status, position: 0 }),
+      onSelect: () =>
+        runMove(todo, { status: todo.status, position: 0 }, `${todo.key} moved to the top`),
     },
     {
       key: "bottom",
       label: "Move to bottom",
       icon: <VerticalAlignBottom fontSize="small" />,
       disabled: at < 0 || at >= column.length - 1,
-      onSelect: () => runMove(todo, { status: todo.status, position: column.length - 1 }),
+      onSelect: () =>
+        runMove(
+          todo,
+          { status: todo.status, position: column.length - 1 },
+          `${todo.key} moved to the bottom`,
+        ),
     },
   ];
   let first = true;

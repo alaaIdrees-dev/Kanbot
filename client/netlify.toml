@@ -1,0 +1,15 @@
+# Netlify: https://docs.netlify.com/configure-builds/file-based-configuration/
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Set VITE_API_URL in Netlify (Site configuration → Environment variables) to the Render API, e.g.
+  # https://kanbot-api.onrender.com/api — it is baked in at build time, so redeploy after changing it.
+
+# Single-page app: every path (e.g. a reload on /projects/:id/board) is served by index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

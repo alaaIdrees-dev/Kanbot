@@ -7,6 +7,7 @@ export { TypeIcon } from "./components/TypeIcon";
 export {
   useBulkCreateTodos,
   useCreateTodo,
-  useDeleteTodo,
   useUpdateTodo,
 } from "./hooks/useTodoMutations";
+export { CreateTodoDialog } from "./components/CreateTodoDialog";
+export { useUndoableDelete } from "./hooks/useUndoableDelete";

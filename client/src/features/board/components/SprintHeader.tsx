@@ -33,6 +33,7 @@ export function SprintHeader({ sprint, actions }: { sprint: Sprint; actions: Rea
           <LinearProgress
             variant="determinate"
             value={percent}
+            color={percent >= 100 ? "success" : "primary"}
             aria-label="Sprint progress in story points"
             sx={{ flex: "1 1 200px", maxWidth: 420 }}
           />

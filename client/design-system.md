@@ -69,10 +69,11 @@ Values live in `tokens.ts` (`schemes.dark`, `schemes.light`). Do not copy hex va
 
 ## 4. Themes and switching
 
-- Attribute: `data-theme="dark" | "light"` on `<html>`; dark is the default.
-- MUI is created with `cssVariables: { colorSchemeSelector: "data-theme" }`; `ThemeProvider defaultMode="dark"` (in `main.tsx`) manages the mode and persists it in `localStorage["mui-mode"]`.
-- `index.html` reads that key and sets `data-theme` before React loads.
-- Toggle with `<ThemeToggle />` (uses MUI's `useColorScheme`).
+- Attribute: `data-theme="dark" | "light"` on `<html>`.
+- Modes: **Light, Dark, System**. With no stored choice (first visit) or "System", the OS `prefers-color-scheme` decides and is followed live; dark is the fallback when it can't be read.
+- MUI is created with `cssVariables: { colorSchemeSelector: "data-theme" }`; `ThemeProvider defaultMode="system"` (in `main.tsx`) manages the mode and persists it in `localStorage["mui-mode"]` (`light` | `dark` | `system`).
+- `index.html` applies the same rule before React loads, so there is no flash of the wrong theme.
+- Toggle with `<ThemeToggle />` (a menu; uses MUI's `useColorScheme`). The command palette offers the same three options.
 - **No component branches on the theme.** If you need a different value per theme, add a token; never write `mode === "dark" ? … : …` in a component.
 
 ---
@@ -142,7 +143,12 @@ Line heights are in the theme. Use the `variant` prop, never raw `fontSize` in c
 - **Layout sizes** (`layout` in tokens → `--kb-layout-*` → Tailwind `w-sidebar` etc.): sidebar 248 (collapsed 64), top bar 56, board column 288 (gap 12), AI drawer 400, page max width 1200, dialogs 420 / 560 / 760.
 - **Radius** (`radius`): sm 4 (chips-small, menu items) · md 6 (**MUI base**; icon buttons, `sx borderRadius: 1`) · lg 10 (buttons, inputs, menus) · xl 14 (dialogs) · pill. Cards/panels use `borderRadius: 3` (= 3 × base = 18) via `sx`, as the existing auth card does.
 - **Shadows:** `palette.shadow.sm/md/lg`, switched per scheme; MUI `elevation` 1–3 → sm, 4–11 → md, 12+ → lg. Paper's dark-mode overlay gradient is disabled.
-- **Motion:** fast 120ms, base 200ms, slow 320ms; easing `cubic-bezier(0.16,1,0.3,1)` (out). Use MUI `transitions.create(...)` in components; keep motion subtle (hover/focus colour, dialog/drawer open).
+- **Motion:** fast 120ms, base 200ms, slow 320ms; easing `cubic-bezier(0.16,1,0.3,1)` (out). Use MUI `transitions.create(...)` in components; keep motion subtle.
+- **Motion catalogue** (keyframes in `style.css`; all collapse to ~0ms under `prefers-reduced-motion` via the CssBaseline rule in `lib/theme.ts`):
+  - `kb-dialog-in`: every MUI `Dialog` paper (and the command palette) rises 14px and scales 0.97 → 1 over 320ms while the container fades.
+  - `kb-progress-in` + a 700ms `transform` transition on determinate `LinearProgress` (theme override): the bar grows from empty on mount and eases to every new value; the sprint bar turns green at 100%.
+  - `kb-lift`: the floating drag preview (backlog and board) lifts (scale 1.025, 1° tilt). The board's drop animation glides the preview into its slot (200ms).
+  - `kb-settle`: the todo that just landed (drop or "Move to…" menu) flashes once. Driven by `lib/motionStore.ts`.
 
 ---
 
@@ -263,6 +269,6 @@ Before creating or changing UI: (1) read the relevant requirement IDs, (2) read 
 - Changing a token or shared component = update code **and** this document in the same commit, and re-run the contrast audit for colour changes.
 
 ## 14. Known limitations
-- **Build, lint and TypeScript were not run for the Day 7 review** (that environment had no network and no `node_modules`). Run `npm run lint && npm run build` and fix anything they report. The only automated check that was executed is the colour audit (§5).
+- Undoable deletes are *staged*: the `DELETE` is sent when the toast closes without "Undo" (or on logout / tab close, best effort). There is no server-side restore. See `lib/pendingDeletes.ts`.
 - Not verified without a browser: `colorSchemeSelector: "data-theme"` generating `[data-theme="light"]` selectors on MUI v9.5 (see README "Verify after pulling"), rendered hover/focus/selected colour pairings, forced-colours mode, screen-reader behaviour, focus-not-obscured (2.4.11) and target sizes (2.5.8). Run axe or Lighthouse on both themes.
 - Fonts: DM Sans loads from Google Fonts (existing behaviour); mono uses system fonts.

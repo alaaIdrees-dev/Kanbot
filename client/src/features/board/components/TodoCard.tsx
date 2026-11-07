@@ -21,6 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import { STATUS_ICON } from "../../../design/todoVisuals";
+import { SETTLE_ANIMATION, useIsSettling } from "../../../lib/motionStore";
 import type { RowMoveAction } from "../../backlog";
 import { PointsBadge, PriorityBadge, TypeIcon } from "../../todos";
 import type { Todo } from "../../../types/api";
@@ -72,6 +73,7 @@ export const TodoCard = forwardRef<HTMLLIElement, TodoCardProps>(function TodoCa
 ) {
   const menuId = useId();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const settling = useIsSettling(todo.id);
   const closeMenu = () => setAnchor(null);
 
   const items: ReactNode[] = [];
@@ -118,7 +120,11 @@ export const TodoCard = forwardRef<HTMLLIElement, TodoCardProps>(function TodoCa
       ref={ref}
       style={style}
       {...rootProps}
-      sx={{ listStyle: "none", opacity: dragging ? 0.4 : 1 }}
+      sx={{
+        listStyle: "none",
+        opacity: dragging ? 0.4 : 1,
+        transition: (theme) => theme.transitions.create("opacity", { duration: 120 }),
+      }}
     >
       <Paper
         variant="outlined"
@@ -128,7 +134,9 @@ export const TodoCard = forwardRef<HTMLLIElement, TodoCardProps>(function TodoCa
           borderRadius: 2,
           bgcolor: "background.paper",
           borderStyle: dragging ? "dashed" : "solid",
-          "&:hover": { borderColor: "border.interactive" },
+          animation: settling ? SETTLE_ANIMATION : "none",
+          transition: (theme) => theme.transitions.create(["border-color", "box-shadow"]),
+          "&:hover": { borderColor: "border.interactive", boxShadow: "var(--mui-palette-shadow-sm)" },
         }}
       >
         <ButtonBase

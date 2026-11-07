@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import {
   Box,
@@ -10,6 +11,7 @@ import {
   TextField,
 } from "@mui/material";
 import { PRIORITY_LABEL, TYPE_LABEL } from "../../../lib/constants";
+import { consumeSearchFocusRequest, SEARCH_ATTRIBUTE } from "../../../lib/searchFocus";
 import { TODO_PRIORITIES, TODO_TYPES, type TodoPriority, type TodoType } from "../../../types/api";
 
 const ALL = "all";
@@ -31,12 +33,19 @@ interface BacklogFiltersProps {
  */
 export function BacklogFilters({ values, onChange }: BacklogFiltersProps) {
   const hasActiveFilters = !!values.search || !!values.priority || !!values.type;
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // The `/` shortcut from another page navigates here and asks for the search box to be focused.
+  useEffect(() => {
+    if (consumeSearchFocusRequest()) searchRef.current?.focus();
+  }, []);
 
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1.5 }}>
       <TextField
         type="search"
         size="small"
+        inputRef={searchRef}
         placeholder="Search todos…"
         value={values.search}
         onChange={(event) => onChange({ ...values, search: event.target.value })}
@@ -48,7 +57,7 @@ export function BacklogFilters({ values, onChange }: BacklogFiltersProps) {
               </InputAdornment>
             ),
           },
-          htmlInput: { "aria-label": "Search the backlog" },
+          htmlInput: { "aria-label": "Search the backlog", [SEARCH_ATTRIBUTE]: "" },
         }}
         sx={{ width: { xs: "100%", sm: 220 } }}
       />

@@ -300,6 +300,7 @@ export function BacklogLists({
             <Paper
               elevation={4}
               sx={{
+                animation: "kb-lift 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
                 display: "flex",
                 alignItems: "center",
                 gap: 1.5,
